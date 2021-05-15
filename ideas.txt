@@ -1,0 +1,38 @@
+THEME: What kills you makes you stronger
+- Swap out enhancements to your body / mech / whatever
+  - These enhancements lower your max health but provide you with MV abilities
+  - Do you take the grappling hook to access the top path? Or do you equip heat resistance and tank the damage down below?
+  - Focus on the speed / endurance dichotomy
+    - Most powers give you speedy ways to get around but lower your ability to withstand continuous damage
+    - Some powers (shield, heat resistance) don't provide movement but instead allow you to withstand damage
+  - Maxing out the powers you have can make it OHKO mode
+  - Swap out different powers at save points, allows you to try new combos quickly
+  - Without any MVs equipped, the character should have
+    - A slow, weak melee attack
+    - A decent running speed
+    - A single jump
+    - Maybe the ability to crouch
+    - A goodly amount of health
+  - Abilities should be limited by both the amount of health you have, and the number of slots
+    - Some power ups should just be life increases, but allowing the player to equip infinity of them would be silly
+  - Life bar made up of individual units
+    - Getting shot will take away a discrete number of units
+    - Env damage will chip away at a single unit: when it's gone the unit goes away, but if you get to safety, you heal it
+  - Who are you?
+    - You're a biological experiment / robit that is trying to escape a lab
+      - Bosses could be different versions of you with different powerups
+        - Mega Man style
+      - Have to decide whether I want the art style of the main character to be clean or icky
+        - Clean = Samus Aran in Super Metroid, Clumsy Robot in Earthbound
+          - Probably easier to show upgrades as part of the player sprite
+          - Easier to design
+        - Icky = Acrid in Risk of Rain
+          - Will look cooler I think, and maybe we don't need to change the sprite
+          - Might be tough to design something distinctive
+    - You're a soldier equipped with experimental technology
+    - You're a spirit of some kind, a ghost, or a lich
+    - You're an italian chef
+      - I don't know how feasible this would be
+  - Customize your sprite
+    - When loading the character image, apply a hue offset to certain pixels of the image, then use the offset version (no shaders!)
+      - Maybe a second hue for your blood / acid / Tang
