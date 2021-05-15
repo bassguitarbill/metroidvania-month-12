@@ -36,3 +36,13 @@ THEME: What kills you makes you stronger
   - Customize your sprite
     - When loading the character image, apply a hue offset to certain pixels of the image, then use the offset version (no shaders!)
       - Maybe a second hue for your blood / acid / Tang
+  - MV Abilities:
+    - Electric burst
+      - Stuns nearby enemies
+      - Overloads electric locks on doors
+    - All Fours
+      - Allows faster movement
+      - Pounce attack
+    - A Gun
+      - Ranged attacks
+      - Shoot a target
