@@ -8,6 +8,8 @@ const HITBOX_OFFSET = new Vector2(-8, -47);
 
 export default class Player extends Entity {
   velocity = new Vector2();
+  isOnGround = false;
+
   tick(dt: number) {
     if (isControlPressed(Controls.RIGHT)) {
       this.velocity.x = 1.0;
@@ -17,6 +19,11 @@ export default class Player extends Entity {
       this.velocity.x = 0;
     }
 
+    if (isControlPressed(Controls.UP) && this.isOnGround) {
+      this.isOnGround = false;
+      this.velocity.y = -.15;
+    }
+
     const lastx = this.x + 0;
     const lasty = this.y + 0
 
@@ -24,14 +31,111 @@ export default class Player extends Entity {
 
     this.velocity.y += GRAVITY;
 
-    const tileIndex = this.game.gameMap?.getTileIndexFromGameMapPosition(Vector2.sumOf(this.position, new Vector2(0, -1)))!;
-    const tileIndexRightBelow = this.game.gameMap?.getTileIndexFromGameMapPosition(Vector2.sumOf(this.position, new Vector2(0, 2)))!;
+    /*const tileIndex = this.game.gameMap?.getTileIndexFromGameMapPosition(this.position)!;
+    const tileIndexRightBelow = this.game.gameMap?.getTileIndexFromGameMapPosition(Vector2.sumOf(this.position, new Vector2(0, 1)))!;
     const terrain = this.game.gameMap?.terrainLayer.data[tileIndex]! - this.game.gameMap?.tileSets[0].firstgid!;
     const terrainRightBelow = this.game.gameMap?.terrainLayer.data[tileIndexRightBelow]! - this.game.gameMap?.tileSets[0].firstgid!;
 
+    
+    const howFarIntoTileY = this.y % TILE_SIZE;*/
     const howFarIntoTileX = this.x % TILE_SIZE;
-    const howFarIntoTileY = this.y % TILE_SIZE;
 
+    if (this.isOnGround) {
+      this.velocity.y = 0; // When you are on the ground, gravity stops affecting you. We all know this.
+
+      const tileIndex = this.game.gameMap?.getTileIndexFromGameMapPosition(this.position)!;
+      const terrain = this.game.gameMap?.terrainLayer.data[tileIndex]! - this.game.gameMap?.tileSets[0].firstgid!;
+      if (terrain === -1) {
+        // I have not run into anything
+        // But what does the ground beneath my feet look like?
+        const tileIndexRightBelow = this.game.gameMap?.getTileIndexFromGameMapPosition(Vector2.sumOf(this.position, new Vector2(0, 2)))!; // Big look, might need to be bigger
+        const terrainRightBelow = this.game.gameMap?.terrainLayer.data[tileIndexRightBelow]! - this.game.gameMap?.tileSets[0].firstgid!;
+        if (terrainRightBelow === -1) {
+          // We have fallen off of the ground
+          this.isOnGround = false;
+        } else {
+          // Check if I'm running onto a slope
+          const terrainProps = this.game.gameMap?.tileSets[0].tileSetData.tiles.find(t => t.id === terrainRightBelow)?.properties;
+          if (terrainProps) {
+            // I am above a slope
+            const howFarIntoTileY = this.y % TILE_SIZE;
+            const props = terrainProps.reduce((acc, p) => { acc[p.name] = p.value; return acc;}, {} as {[key in string]: number})
+            const slopeHeight = lerp(props.slopeLeft, props.slopeRight, howFarIntoTileX / TILE_SIZE);
+            this.y -= (howFarIntoTileY - slopeHeight - TILE_SIZE);
+          } else {
+            // Solid ground beneath my feet, all is good
+          }
+        }
+
+      } else {
+        const terrainProps = this.game.gameMap?.tileSets[0].tileSetData.tiles.find(t => t.id === terrain)?.properties;
+        if (terrainProps) {
+          // I am on a slope
+          const howFarIntoTileY = this.y % TILE_SIZE;
+          const props = terrainProps.reduce((acc, p) => { acc[p.name] = p.value; return acc;}, {} as {[key in string]: number})
+          const slopeHeight = lerp(props.slopeLeft, props.slopeRight, howFarIntoTileX / TILE_SIZE);
+          this.y -= (howFarIntoTileY - slopeHeight);
+        } else {
+          // I seem to have entered a solid block feet-first, while on solid ground. This shouldn't happen?
+          // Unless maybe you are moving between tiles, going up a slope?
+          const tileIndexRightAbove = this.game.gameMap?.getTileIndexFromGameMapPosition(Vector2.sumOf(this.position, new Vector2(0, -1)))!;
+          const terrainRightAbove = this.game.gameMap?.terrainLayer.data[tileIndexRightAbove]! - this.game.gameMap?.tileSets[0].firstgid!;
+          if (terrainRightAbove === -1) {
+            // just pop up
+            this.y -= 1;
+          } else {
+            const terrainRightAboveProps = this.game.gameMap?.tileSets[0].tileSetData.tiles.find(t => t.id === terrainRightAbove)?.properties;
+            if (terrainRightAboveProps) {
+              // Yep okay we have entered a slope from below
+              
+              const howFarIntoTileY = this.y % TILE_SIZE;
+              const props = terrainRightAboveProps.reduce((acc, p) => { acc[p.name] = p.value; return acc;}, {} as {[key in string]: number})
+              const slopeHeight = lerp(props.slopeLeft, props.slopeRight, howFarIntoTileX / TILE_SIZE);
+              this.y -= (TILE_SIZE + howFarIntoTileY - slopeHeight);
+            
+            } else {
+              console.error('Why are you in a solid block?', terrain, terrainRightAbove);
+              if ((window as any).debug) debugger;
+            }
+          }
+        }
+      }
+
+    } else {
+      // I am in freefall
+      this.y += (this.velocity.y * dt);
+      const tileIndex = this.game.gameMap?.getTileIndexFromGameMapPosition(this.position)!;
+      const terrain = this.game.gameMap?.terrainLayer.data[tileIndex]! - this.game.gameMap?.tileSets[0].firstgid!;
+      // My feet are inside this terrain: it can be either empty space, solid, or a slope
+      if (terrain === -1) {
+        // empty space, I should continue falling
+      } else {
+        const terrainProps = this.game.gameMap?.tileSets[0].tileSetData.tiles.find(t => t.id === terrain)?.properties;
+        if (terrainProps) {
+          // I have landed on a slope
+          // Am I above the slope or actually inside it?
+          const howFarIntoTileY = this.y % TILE_SIZE;
+          const props = terrainProps.reduce((acc, p) => { acc[p.name] = p.value; return acc;}, {} as {[key in string]: number})
+          const slopeHeight = lerp(props.slopeLeft, props.slopeRight, howFarIntoTileX / TILE_SIZE);
+          if (slopeHeight > howFarIntoTileY) {
+            // Still above it
+          } else {
+            // I've landed
+            this.y -= (howFarIntoTileY - slopeHeight);
+            this.isOnGround = true;
+          }
+        } else {
+          // I have landed inside a solid block
+          // Need to rise out of it
+          this.position.y -= ((this.y % TILE_SIZE) + 1); // +1 to put my feet above the ground, not still in it
+          this.position.y = Math.floor(this.position.y);
+          this.isOnGround = true;
+        }
+      }
+
+    }
+
+    /*
     if (terrainRightBelow > -1) {
       // there is a floor below our feet
       if (terrain > -1) {
@@ -88,7 +192,7 @@ export default class Player extends Entity {
           if (slopeHeight < howFarIntoTileY) {
             this.y -= (howFarIntoTileY - slopeHeight);
             this.velocity.y = 0;
-          }*/
+          }
         } else {
           // we are above a floor
           // TODO snap to correct height
@@ -108,7 +212,7 @@ export default class Player extends Entity {
       
     } else {
       this.y += (this.velocity.y * dt);
-    }
+    }*/
     /*if (terrain! === 0 && terrainRightBelow! > 0) {
       console.log('not bonk')
       // we are on the ground
@@ -125,7 +229,7 @@ export default class Player extends Entity {
   }
 
   draw(ctx: CanvasRenderingContext2D) {
-    ctx.fillStyle = 'red';
+    ctx.fillStyle = this.isOnGround ? 'red' : 'yellow';
     ctx.fillRect(this.x + HITBOX_OFFSET.x, this.y + HITBOX_OFFSET.y, 16, 48);
     ctx.fillStyle = 'white';
     ctx.fillRect(this.x, this.y, 1, 1);
