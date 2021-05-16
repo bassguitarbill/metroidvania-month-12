@@ -42,11 +42,10 @@ export default class Player extends Entity {
           this.isOnGround = false;
         } else {
           // Check if I'm running onto a slope
-          const terrainProps = this.getPropertiesFromTerrain(terrainRightBelow);
-          if (terrainProps) {
+          const props = this.getPropertiesFromTerrain(terrainRightBelow);
+          if (props) {
             // I am above a slope
             const howFarIntoTileY = this.y % TILE_SIZE;
-            const props = terrainProps.reduce((acc, p) => { acc[p.name] = p.value; return acc;}, {} as {[key in string]: number})
             const slopeHeight = lerp(props.slopeLeft, props.slopeRight, howFarIntoTileX / TILE_SIZE);
             this.y -= (howFarIntoTileY - slopeHeight - TILE_SIZE);
           } else {
@@ -55,11 +54,10 @@ export default class Player extends Entity {
         }
 
       } else {
-        const terrainProps = this.getPropertiesFromTerrain(terrain);
-        if (terrainProps) {
+        const props = this.getPropertiesFromTerrain(terrain);
+        if (props) {
           // I am on a slope
           const howFarIntoTileY = this.y % TILE_SIZE;
-          const props = terrainProps.reduce((acc, p) => { acc[p.name] = p.value; return acc;}, {} as {[key in string]: number})
           const slopeHeight = lerp(props.slopeLeft, props.slopeRight, howFarIntoTileX / TILE_SIZE);
           this.y -= (howFarIntoTileY - slopeHeight);
         } else {
@@ -70,12 +68,10 @@ export default class Player extends Entity {
             // just pop up
             this.y -= 1;
           } else {
-            const terrainRightAboveProps = this.getPropertiesFromTerrain(terrainRightAbove);
-            if (terrainRightAboveProps) {
+            const props = this.getPropertiesFromTerrain(terrainRightAbove);
+            if (props) {
               // Yep okay we have entered a slope from below
-              
               const howFarIntoTileY = this.y % TILE_SIZE;
-              const props = terrainRightAboveProps.reduce((acc, p) => { acc[p.name] = p.value; return acc;}, {} as {[key in string]: number})
               const slopeHeight = lerp(props.slopeLeft, props.slopeRight, howFarIntoTileX / TILE_SIZE);
               this.y -= (TILE_SIZE + howFarIntoTileY - slopeHeight);
             
@@ -95,12 +91,11 @@ export default class Player extends Entity {
       if (terrain === -1) {
         // empty space, I should continue falling
       } else {
-        const terrainProps = this.getPropertiesFromTerrain(terrain);
-        if (terrainProps) {
+        const props = this.getPropertiesFromTerrain(terrain);
+        if (props) {
           // I have landed on a slope
           // Am I above the slope or actually inside it?
           const howFarIntoTileY = this.y % TILE_SIZE;
-          const props = terrainProps.reduce((acc, p) => { acc[p.name] = p.value; return acc;}, {} as {[key in string]: number})
           const slopeHeight = lerp(props.slopeLeft, props.slopeRight, howFarIntoTileX / TILE_SIZE);
           if (slopeHeight > howFarIntoTileY) {
             // Still above it
@@ -126,7 +121,9 @@ export default class Player extends Entity {
   }
 
   getPropertiesFromTerrain(tileIndex: number) {
-    return this.game.gameMap?.tileSets[0].tileSetData.tiles.find(t => t.id === tileIndex)?.properties;
+    const listedProps = this.game.gameMap?.tileSets[0].tileSetData.tiles.find(t => t.id === tileIndex)?.properties;
+    if (!listedProps) return null;
+    return listedProps.reduce((acc, p) => { acc[p.name] = p.value; return acc;}, {} as {[key in string]: number})
   }
 
   draw(ctx: CanvasRenderingContext2D) {
