@@ -39,4 +39,10 @@ class Vector2 {
   }
 }
 
-export { Vector2 };
+function lerp(start: number, end: number, amount: number) {
+  const size = end - start;
+  const progress = amount * size;
+  return start + progress;
+}
+
+export { Vector2, lerp };

@@ -1,5 +1,6 @@
 import TileSet from "./TileSet.js";
 import { loadJson } from "./load.js";
+import { Vector2 } from "./math.js";
 
 export default class GameMap {
   animationTimer = 0;
@@ -59,6 +60,10 @@ export default class GameMap {
 
   getTileIndex(x: number, y: number) {
     return (this.terrainLayer.width * y) + x;
+  }
+
+  getTileIndexFromGameMapPosition(position: Vector2) {
+    return this.getTileIndex(Math.floor(position.x / this.mapData.tilewidth), Math.floor(position.y / this.mapData.tileheight));
   }
 
 }
