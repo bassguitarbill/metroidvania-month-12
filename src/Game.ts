@@ -23,7 +23,7 @@ export default class Game {
     const canvas = document.querySelector('canvas')!;
     this.ctx = canvas.getContext('2d')!;
 
-    this.player = new Player(this, new Vector2(0, 0));
+    this.player = new Player(this, new Vector2(15, 65));
 
     this.tick = this.tick.bind(this);
   }
