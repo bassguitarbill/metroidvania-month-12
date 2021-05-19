@@ -1,6 +1,6 @@
 import Entity from "./Entity.js";
 import GameMap from "./GameMap.js";
-import { SCALE } from './canvas.js';
+import { PLAYFIELD_HEIGHT, PLAYFIELD_WIDTH, SCALE } from './canvas.js';
 import Player from "./Player.js";
 import { Vector2 } from "./math.js";
 
@@ -23,7 +23,7 @@ export default class Game {
     const canvas = document.querySelector('canvas')!;
     this.ctx = canvas.getContext('2d')!;
 
-    this.player = new Player(this, new Vector2(15, 65));
+    this.player = new Player(this, new Vector2(128, 64));
 
     this.tick = this.tick.bind(this);
   }
@@ -38,7 +38,7 @@ export default class Game {
   }
 
   async run() {
-    this.gameMap = await GameMap.loadInstance('../maps/testmap.json');
+    this.gameMap = await GameMap.loadInstance('../maps/spaceColony.json');
     requestAnimationFrame(this.tick);
   }
 
@@ -52,8 +52,10 @@ export default class Game {
     this.ctx.fillStyle = 'cyan';
     this.ctx.fillRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
     this.ctx.scale(SCALE, SCALE);
-    if (this.gameMap) this.gameMap.draw(this.ctx);
+    this.ctx.translate(-this.player.x + (PLAYFIELD_WIDTH/2), -this.player.y + (PLAYFIELD_HEIGHT/2));
+    if (this.gameMap) this.gameMap.draw(this.ctx, this);
     this.entities.forEach(e => e.draw(this.ctx));
+    this.ctx.translate(this.player.x - (PLAYFIELD_WIDTH/2), this.player.y - (PLAYFIELD_HEIGHT/2));
     this.ctx.scale(1/SCALE, 1/SCALE);
 
     requestAnimationFrame(this.tick);

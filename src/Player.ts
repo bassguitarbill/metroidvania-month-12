@@ -45,7 +45,7 @@ export default class Player extends Entity {
     if (isControlPressed(Controls.UP)) {
       if (this.isOnGround) {
         this.isOnGround = false;
-        this.velocity.y = -.15;
+        this.velocity.y = -.21;
       } 
     } else {
       this.gravityScale = JUMP_RELEASED_GRAVITY_SCALE;
@@ -239,6 +239,6 @@ export default class Player extends Entity {
     ctx.fillRect(this.x + HITBOX_OFFSET.x, this.y + HITBOX_OFFSET.y, HITBOX_SIZE.x, HITBOX_SIZE.y);
     ctx.fillStyle = 'white';
     ctx.fillRect(this.x, this.y, 1, 1);
-    ctx.fillText(String(this.velocity.x), this.x, this.y - 10);
+    ctx.fillText(this.game.gameMap!.getZone(this.position)!.id + "", this.x, this.y - 10);
   }
 }

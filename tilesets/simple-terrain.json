@@ -1,4 +1,4 @@
-{ "columns":6,
+{ "columns":8,
  "editorsettings":
     {
      "export":
@@ -9,11 +9,11 @@
     },
  "image":"..\/assets\/images\/single-block.png",
  "imageheight":16,
- "imagewidth":96,
+ "imagewidth":128,
  "margin":0,
  "name":"single-block",
  "spacing":0,
- "tilecount":6,
+ "tilecount":8,
  "tiledversion":"1.4.2",
  "tileheight":16,
  "tiles":[
@@ -66,6 +66,34 @@
                  "name":"slopeLeft",
                  "type":"int",
                  "value":8
+                }, 
+                {
+                 "name":"slopeRight",
+                 "type":"int",
+                 "value":15
+                }]
+        }, 
+        {
+         "id":6,
+         "properties":[
+                {
+                 "name":"slopeLeft",
+                 "type":"int",
+                 "value":15
+                }, 
+                {
+                 "name":"slopeRight",
+                 "type":"int",
+                 "value":0
+                }]
+        }, 
+        {
+         "id":7,
+         "properties":[
+                {
+                 "name":"slopeLeft",
+                 "type":"int",
+                 "value":0
                 }, 
                 {
                  "name":"slopeRight",

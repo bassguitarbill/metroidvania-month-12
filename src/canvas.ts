@@ -21,4 +21,6 @@ function initializeCanvas(): HTMLCanvasElement{
 export {
   initializeCanvas,
   SCALE,
+  PLAYFIELD_HEIGHT,
+  PLAYFIELD_WIDTH,
 }

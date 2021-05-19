@@ -1,6 +1,7 @@
 import TileSet from "./TileSet.js";
 import { loadJson } from "./load.js";
 import { Vector2 } from "./math.js";
+import Game from "./Game.js";
 
 export default class GameMap {
   animationTimer = 0;
@@ -8,6 +9,7 @@ export default class GameMap {
   darknessLevel = 0;
   maxDarknessLevel = 0;
   terrainLayer: MapDataLayer;
+  zoneLayer: MapDataLayer;
 
   colliderData: Array<Array<number>> = [];
   checkingTheseTiles: Array<number> = [];
@@ -16,6 +18,10 @@ export default class GameMap {
     const terrainLayer = this.mapData.layers.find(l => l.name === 'terrain');
     if (!terrainLayer) throw 'No terrain layer in map data';
     this.terrainLayer = terrainLayer;
+
+    const zoneLayer = this.mapData.layers.find(l => l.name === 'zones');
+    if (!zoneLayer) throw 'No terrain layer in map data';
+    this.zoneLayer = zoneLayer;
   }
   
   static async loadInstance(mapFilePath: string): Promise<GameMap> {
@@ -33,18 +39,20 @@ export default class GameMap {
     this.animationTimer += dt;
   }
 
-  draw(ctx: CanvasRenderingContext2D) {
+  draw(ctx: CanvasRenderingContext2D, game: Game) {
     if(!this.mapData) return;
-    this.drawLayer(ctx, this.mapData.layers[0], this.tileSets[0]);
+    this.drawLayer(ctx, this.mapData.layers[0], this.tileSets[0], game);
   }
 
-  drawLayer(ctx: CanvasRenderingContext2D, layer: MapDataLayer, tileset: TileSet) {
+  drawLayer(ctx: CanvasRenderingContext2D, layer: MapDataLayer, tileset: TileSet, game: Game) {
     const tilesetData = tileset.tileSetData!;
     const image = tileset.image;
     const columns = tilesetData.columns;
     
-    for (let x=0; x < layer.width; x++) {
-      for (let y=0; y < layer.height; y++) {
+    const currentZone = this.getZone(game.player.position);
+    if (!currentZone) return;
+    for (let x=(currentZone.x / tilesetData.tilewidth); x < ((currentZone.x+currentZone.width) / tilesetData.tilewidth); x++) {
+      for (let y=(currentZone.y / tilesetData.tileheight); y < ((currentZone.y+currentZone.height) / tilesetData.tileheight); y++) {
         const tileIndex = layer.data[(layer.width * y) + x];
         if (tileIndex === 0) continue; // Empty tile
         
@@ -64,6 +72,12 @@ export default class GameMap {
 
   getTileIndexFromGameMapPosition(position: Vector2) {
     return this.getTileIndex(Math.floor(position.x / this.mapData.tilewidth), Math.floor(position.y / this.mapData.tileheight));
+  }
+
+  getZone(position: Vector2): ObjectData | undefined {
+    return this.zoneLayer.objects.find(zone => {
+      return position.x > zone.x && position.x < (zone.x + zone.width) && position.y > zone.y && position.y < (zone.y + zone.height);
+    });
   }
 
 }
