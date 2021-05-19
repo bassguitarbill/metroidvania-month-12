@@ -1,7 +1,7 @@
 // SNES = 512×224 (16:7)
 // This: nearby that but 16:9
-const PLAYFIELD_WIDTH = 512;  // 32 * 16
-const PLAYFIELD_HEIGHT = 288; // 32 * 9
+const PLAYFIELD_WIDTH  = 512; // 16 * 32
+const PLAYFIELD_HEIGHT = 288; // 16 * 18
 
 const SCALE = 2;
 
