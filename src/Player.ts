@@ -11,10 +11,14 @@ const RUN_ACCELERATION = 0.004;
 const MAX_RUN_SPEED = 1.5;
 const RUN_DECELERATION = 0.008;
 
+const JUMP_HELD_GRAVITY_SCALE = 1;
+const JUMP_RELEASED_GRAVITY_SCALE = 2.5;
+
 export default class Player extends Entity {
   velocity = new Vector2();
   isOnGround = false;
   isOnSlope = false;
+  gravityScale = JUMP_HELD_GRAVITY_SCALE;
 
   tick(dt: number) {
     let xVelocity = this.velocity.x + 0;
@@ -38,19 +42,24 @@ export default class Player extends Entity {
     if (Math.sign(xVelocity) - 2 === Math.sign(this.velocity.x)) xVelocity = 0; // Deceleration should not push you backwards
     this.velocity.x = xVelocity;
 
-    if (isControlPressed(Controls.UP) && this.isOnGround) {
-      this.isOnGround = false;
-      this.velocity.y = -.15;
+    if (isControlPressed(Controls.UP)) {
+      if (this.isOnGround) {
+        this.isOnGround = false;
+        this.velocity.y = -.15;
+      } 
+    } else {
+      this.gravityScale = JUMP_RELEASED_GRAVITY_SCALE;
     }
 
     this.x += (this.velocity.x * dt * 0.1);
-    this.velocity.y += GRAVITY;
+    this.velocity.y += (GRAVITY * this.gravityScale);
 
     const howFarIntoTileX = this.x % TILE_SIZE;
 
     this.checkLateralCollisions();
 
     if (this.isOnGround) {
+      this.gravityScale = JUMP_HELD_GRAVITY_SCALE;
       this.velocity.y = 0; // When you are on the ground, gravity stops affecting you. We all know this.
       this.isOnSlope = false; // We will set this appropriately, later.
 
