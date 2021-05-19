@@ -7,19 +7,36 @@ const GRAVITY = .003;
 const HITBOX_OFFSET = new Vector2(-8, -47);
 const HITBOX_SIZE = new Vector2(16, 48);
 
+const RUN_ACCELERATION = 0.004;
+const MAX_RUN_SPEED = 1.5;
+const RUN_DECELERATION = 0.008;
+
 export default class Player extends Entity {
   velocity = new Vector2();
   isOnGround = false;
   isOnSlope = false;
 
   tick(dt: number) {
+    let xVelocity = this.velocity.x + 0;
     if (isControlPressed(Controls.RIGHT)) {
-      this.velocity.x = 1.0;
+      xVelocity += (RUN_ACCELERATION * dt);
+      if (Math.sign(this.velocity.x) === -1) {
+        // pushing right while moving left
+        xVelocity += (RUN_DECELERATION * dt);
+      }
     } else if (isControlPressed(Controls.LEFT)) {
-      this.velocity.x = -1.0;
+      xVelocity -= (RUN_ACCELERATION * dt);
+      if (Math.sign(this.velocity.x) === 1) {
+        // pushing left while moving right
+        xVelocity -= (RUN_DECELERATION * dt);
+      }
     } else {
-      this.velocity.x = 0;
+      xVelocity -= (Math.sign(xVelocity) * RUN_DECELERATION * dt);
     }
+
+    xVelocity = Math.min(Math.max(xVelocity, -MAX_RUN_SPEED), MAX_RUN_SPEED);
+    if (Math.sign(xVelocity) - 2 === Math.sign(this.velocity.x)) xVelocity = 0; // Deceleration should not push you backwards
+    this.velocity.x = xVelocity;
 
     if (isControlPressed(Controls.UP) && this.isOnGround) {
       this.isOnGround = false;
@@ -41,7 +58,7 @@ export default class Player extends Entity {
       if (terrain === -1) {
         // I have not run into anything
         // But what does the ground beneath my feet look like?
-        const terrainRightBelow = this.getTerrain(new Vector2(0, 2)); // Big look, might need to be bigger
+        const terrainRightBelow = this.getTerrain(new Vector2(0, 3)); // Big look, might need to be bigger
         if (terrainRightBelow === -1) {
           // We have fallen off of the ground
           this.isOnGround = false;
@@ -70,7 +87,7 @@ export default class Player extends Entity {
         } else {
           // I seem to have entered a solid block feet-first, while on solid ground. This shouldn't happen?
           // Unless maybe you are moving between tiles, going up a slope?
-          const terrainRightAbove = this.getTerrain(new Vector2(0, -1));
+          const terrainRightAbove = this.getTerrain(new Vector2(0, -3));
           if (terrainRightAbove === -1) {
             // just pop up
             this.y -= 1;
@@ -78,13 +95,14 @@ export default class Player extends Entity {
             const props = this.getPropertiesFromTerrain(terrainRightAbove);
             if (props) {
               // Yep okay we have entered a slope from below
+              console.log('slope from below')
               const howFarIntoTileY = this.y % TILE_SIZE;
               const slopeHeight = lerp(props.slopeLeft, props.slopeRight, howFarIntoTileX / TILE_SIZE);
               this.y -= (TILE_SIZE + howFarIntoTileY - slopeHeight);
               this.isOnSlope = true;
             
             } else {
-              //console.error('Why are you in a solid block?', this.x, this.y);
+              console.error('Why are you in a solid block?', this.x, this.y);
               if ((window as any).debug) debugger;
             }
           }
@@ -155,6 +173,7 @@ export default class Player extends Entity {
           // Colliding
           const howFarIntoTileX = (this.x + horizOffset) % TILE_SIZE;
           this.x -= howFarIntoTileX;
+          this.velocity.x = 0;
         }
       }
       // Check the bottom left corner of the hitbox
@@ -167,6 +186,7 @@ export default class Player extends Entity {
           // Colliding
           const howFarIntoTileX = TILE_SIZE - (this.x + HITBOX_OFFSET.x) % TILE_SIZE;
           this.x += howFarIntoTileX;
+          this.velocity.x = 0;
         }
       }
     }
@@ -178,6 +198,7 @@ export default class Player extends Entity {
         if(!props) {
           const howFarIntoTileX = (this.x + horizOffset) % TILE_SIZE;
           this.x -= howFarIntoTileX;
+          this.velocity.x = 0;
         }
       }
       const leftTerrain = this.getTerrain(new Vector2(HITBOX_OFFSET.x, HITBOX_OFFSET.y + y));
@@ -186,6 +207,7 @@ export default class Player extends Entity {
         if(!props) {
           const howFarIntoTileX = TILE_SIZE - (this.x + HITBOX_OFFSET.x) % TILE_SIZE;
           this.x += howFarIntoTileX;
+          this.velocity.x = 0;
         }
       }
     }
@@ -208,5 +230,6 @@ export default class Player extends Entity {
     ctx.fillRect(this.x + HITBOX_OFFSET.x, this.y + HITBOX_OFFSET.y, HITBOX_SIZE.x, HITBOX_SIZE.y);
     ctx.fillStyle = 'white';
     ctx.fillRect(this.x, this.y, 1, 1);
+    ctx.fillText(String(this.velocity.x), this.x, this.y - 10);
   }
 }
