@@ -67,13 +67,13 @@ export default class Player extends Entity {
       if (terrain === -1) {
         // I have not run into anything
         // But what does the ground beneath my feet look like?
-        const terrainRightBelow = this.getTerrain(new Vector2(0, 3)); // Big look, might need to be bigger
+        const terrainRightBelow = this.getTerrain(new Vector2(0, 8)); // Big look, might need to be bigger
         if (terrainRightBelow === -1) {
           // We have fallen off of the ground
           this.isOnGround = false;
         } else {
           // Check if I'm running onto a slope
-          const props = this.getPropertiesFromTerrain(new Vector2(0, 3));
+          const props = this.getPropertiesFromTerrain(new Vector2(0, 8));
           const howFarIntoTileY = this.y % TILE_SIZE;
           if (props) {
             // I am above a slope
@@ -101,13 +101,11 @@ export default class Player extends Entity {
           const terrainRightAbove = this.getTerrain(new Vector2(0, -3));
           if (terrainRightAbove === -1) {
             // just pop up
-            console.log('pop', howFarIntoTileY, this.y)
             this.y -= howFarIntoTileY + 1;
           } else {
             const props = this.getPropertiesFromTerrain(new Vector2(0, -3));
             if (props) {
               // Yep okay we have entered a slope from below
-              console.log('slope from below')
               const howFarIntoTileY = this.y % TILE_SIZE;
               const slopeHeight = lerp(props.slopeLeft, props.slopeRight, howFarIntoTileX / TILE_SIZE);
               this.y -= (TILE_SIZE + howFarIntoTileY - slopeHeight);
