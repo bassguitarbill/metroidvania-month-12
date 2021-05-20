@@ -225,11 +225,12 @@ export default class Player extends Entity {
 
   getTerrain(offset = new Vector2()) {
     const tileIndex = this.game.gameMap?.getTileIndexFromGameMapPosition(Vector2.sumOf(this.position, offset))!;
-    return this.game.gameMap?.terrainLayer.data[tileIndex]! - this.game.gameMap?.tileSets[0].firstgid!;
+    const offsetTerrain = this.game.gameMap?.terrainLayer.data[tileIndex]!;
+    return offsetTerrain === 0 ? -1 : offsetTerrain - this.game.gameMap?.tileSets[1].firstgid!;
   }
 
   getPropertiesFromTerrain(tileIndex: number) {
-    const listedProps = this.game.gameMap?.tileSets[0].tileSetData.tiles.find(t => t.id === tileIndex)?.properties;
+    const listedProps = this.game.gameMap?.tileSets[1].tileSetData.tiles.find(t => t.id === tileIndex)?.properties;
     if (!listedProps) return null;
     return listedProps.reduce((acc, p) => { acc[p.name] = p.value; return acc;}, {} as {[key in string]: number})
   }

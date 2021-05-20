@@ -41,7 +41,7 @@ export default class GameMap {
 
   draw(ctx: CanvasRenderingContext2D, game: Game) {
     if(!this.mapData) return;
-    this.drawLayer(ctx, this.mapData.layers[0], this.tileSets[0], game);
+    this.drawLayer(ctx, this.terrainLayer, this.tileSets[1], game);
   }
 
   drawLayer(ctx: CanvasRenderingContext2D, layer: MapDataLayer, tileset: TileSet, game: Game) {
@@ -55,7 +55,6 @@ export default class GameMap {
       for (let y=(currentZone.y / tilesetData.tileheight); y < ((currentZone.y+currentZone.height) / tilesetData.tileheight); y++) {
         const tileIndex = layer.data[(layer.width * y) + x];
         if (tileIndex === 0) continue; // Empty tile
-        
         let tileFromSet = tileIndex - tileset.firstgid;
 
         const tileImageX = (tileFromSet % columns) * tilesetData.tilewidth;
