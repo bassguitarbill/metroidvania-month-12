@@ -73,7 +73,7 @@ export default class Player extends Entity {
           this.isOnGround = false;
         } else {
           // Check if I'm running onto a slope
-          const props = this.getPropertiesFromTerrain(terrainRightBelow);
+          const props = this.getPropertiesFromTerrain(new Vector2(0, 3));
           if (props) {
             // I am above a slope
             const howFarIntoTileY = this.y % TILE_SIZE;
@@ -86,7 +86,7 @@ export default class Player extends Entity {
         }
 
       } else {
-        const props = this.getPropertiesFromTerrain(terrain);
+        const props = this.getPropertiesFromTerrain();
         if (props) {
           // I am on a slope
           const howFarIntoTileY = this.y % TILE_SIZE;
@@ -101,7 +101,7 @@ export default class Player extends Entity {
             // just pop up
             this.y -= 1;
           } else {
-            const props = this.getPropertiesFromTerrain(terrainRightAbove);
+            const props = this.getPropertiesFromTerrain(new Vector2(0, -3));
             if (props) {
               // Yep okay we have entered a slope from below
               console.log('slope from below')
@@ -142,7 +142,7 @@ export default class Player extends Entity {
       if (terrain === -1) {
         // empty space, I should continue falling
       } else {
-        const props = this.getPropertiesFromTerrain(terrain);
+        const props = this.getPropertiesFromTerrain();
         if (props) {
           // I have landed on a slope
           // Am I above the slope or actually inside it?
@@ -175,7 +175,7 @@ export default class Player extends Entity {
       // Check the bottom right corner of the hitbox
       const rightTerrain = this.getTerrain(new Vector2(horizOffset, 0));
       if (rightTerrain !== -1) {
-        const props = this.getPropertiesFromTerrain(rightTerrain);
+        const props = this.getPropertiesFromTerrain(new Vector2(horizOffset, 0));
         if (props) {
           // Running onto a slope
         } else {
@@ -188,7 +188,7 @@ export default class Player extends Entity {
       // Check the bottom left corner of the hitbox
       const leftTerrain = this.getTerrain(new Vector2(HITBOX_OFFSET.x, 0));
       if (leftTerrain !== -1) {
-        const props = this.getPropertiesFromTerrain(leftTerrain);
+        const props = this.getPropertiesFromTerrain(new Vector2(HITBOX_OFFSET.x, 0));
         if (props) {
           // Running onto a slope
         } else {
@@ -203,7 +203,7 @@ export default class Player extends Entity {
     for (let y=0; y < HITBOX_SIZE.y; y += TILE_SIZE) {
       const rightTerrain = this.getTerrain(new Vector2(horizOffset, HITBOX_OFFSET.y + y));
       if (rightTerrain !== -1) {
-        const props = this.getPropertiesFromTerrain(rightTerrain);
+        const props = this.getPropertiesFromTerrain(new Vector2(horizOffset, HITBOX_OFFSET.y + y));
         if(!props) {
           const howFarIntoTileX = (this.x + horizOffset) % TILE_SIZE;
           this.x -= howFarIntoTileX;
@@ -212,7 +212,7 @@ export default class Player extends Entity {
       }
       const leftTerrain = this.getTerrain(new Vector2(HITBOX_OFFSET.x, HITBOX_OFFSET.y + y));
       if (leftTerrain !== -1) {
-        const props = this.getPropertiesFromTerrain(leftTerrain);
+        const props = this.getPropertiesFromTerrain(new Vector2(HITBOX_OFFSET.x, HITBOX_OFFSET.y + y));
         if(!props) {
           const howFarIntoTileX = TILE_SIZE - (this.x + HITBOX_OFFSET.x) % TILE_SIZE;
           this.x += howFarIntoTileX;
@@ -226,12 +226,19 @@ export default class Player extends Entity {
   getTerrain(offset = new Vector2()) {
     const tileIndex = this.game.gameMap?.getTileIndexFromGameMapPosition(Vector2.sumOf(this.position, offset))!;
     const offsetTerrain = this.game.gameMap?.terrainLayer.data[tileIndex]!;
-    return offsetTerrain === 0 ? -1 : offsetTerrain - this.game.gameMap?.tileSets[1].firstgid!;
+    const gameMap = this.game.gameMap!;
+    const tileSet = gameMap.getTilesetFromIndexAndLayer(offsetTerrain);
+    return offsetTerrain === 0 ? -1 : offsetTerrain - tileSet.firstgid;
   }
 
-  getPropertiesFromTerrain(tileIndex: number) {
-    const listedProps = this.game.gameMap?.tileSets[1].tileSetData.tiles.find(t => t.id === tileIndex)?.properties;
-    if (!listedProps) return null;
+  getPropertiesFromTerrain(offset = new Vector2()) {
+    const tileIndex = this.game.gameMap?.getTileIndexFromGameMapPosition(Vector2.sumOf(this.position, offset))!;
+    const offsetTerrain = this.game.gameMap?.terrainLayer.data[tileIndex]!;
+    //if (tileIndex === 0) return;
+    const gameMap = this.game.gameMap!;
+    const tileSet = gameMap.getTilesetFromIndexAndLayer(offsetTerrain);
+    const listedProps = tileSet.tileSetData.tiles.find(t => t.id === offsetTerrain - tileSet.firstgid)?.properties;
+    if (!listedProps) return undefined;
     return listedProps.reduce((acc, p) => { acc[p.name] = p.value; return acc;}, {} as {[key in string]: number})
   }
 

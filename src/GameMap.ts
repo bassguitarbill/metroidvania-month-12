@@ -41,26 +41,30 @@ export default class GameMap {
 
   draw(ctx: CanvasRenderingContext2D, game: Game) {
     if(!this.mapData) return;
-    this.drawLayer(ctx, this.terrainLayer, this.tileSets[1], game);
+    this.drawLayer(ctx, this.terrainLayer, game);
   }
 
-  drawLayer(ctx: CanvasRenderingContext2D, layer: MapDataLayer, tileset: TileSet, game: Game) {
-    const tilesetData = tileset.tileSetData!;
-    const image = tileset.image;
-    const columns = tilesetData.columns;
+  drawLayer(ctx: CanvasRenderingContext2D, layer: MapDataLayer, game: Game) {
+    //const tilesetData = tileset.tileSetData!;
+    //const image = tileset.image;
+    //const columns = tilesetData.columns;
+
+    const { tilewidth, tileheight } = this.mapData;
     
     const currentZone = this.getZone(game.player.position);
     if (!currentZone) return;
-    for (let x=(currentZone.x / tilesetData.tilewidth); x < ((currentZone.x+currentZone.width) / tilesetData.tilewidth); x++) {
-      for (let y=(currentZone.y / tilesetData.tileheight); y < ((currentZone.y+currentZone.height) / tilesetData.tileheight); y++) {
+    for (let x=(currentZone.x / tilewidth); x < ((currentZone.x+currentZone.width) / tilewidth); x++) {
+      for (let y=(currentZone.y / tileheight); y < ((currentZone.y+currentZone.height) / tileheight); y++) {
         const tileIndex = layer.data[(layer.width * y) + x];
         if (tileIndex === 0) continue; // Empty tile
+        const tileset = this.getTilesetFromIndexAndLayer(tileIndex);
         let tileFromSet = tileIndex - tileset.firstgid;
 
-        const tileImageX = (tileFromSet % columns) * tilesetData.tilewidth;
-        const tileImageY = Math.floor(tileFromSet / columns) * tilesetData.tileheight;
-        ctx.drawImage(image, tileImageX, tileImageY, tilesetData.tilewidth, tilesetData.tileheight,
-          x * tilesetData.tilewidth, y * tilesetData.tileheight, tilesetData.tilewidth, tilesetData.tileheight);
+        if (tileFromSet < 0) console.error('fuck', x, y, tileIndex, tileFromSet);
+        const tileImageX = (tileFromSet % tileset.tileSetData.columns) * tilewidth;
+        const tileImageY = Math.floor(tileFromSet / tileset.tileSetData.columns) * tileheight;
+        ctx.drawImage(tileset.image, tileImageX, tileImageY, tilewidth, tileheight,
+          x * tilewidth, y * tileheight, tilewidth, tileheight);
       }
     }
   }
@@ -76,6 +80,15 @@ export default class GameMap {
   getZone(position: Vector2): ObjectData | undefined {
     return this.zoneLayer.objects.find(zone => {
       return position.x > zone.x && position.x < (zone.x + zone.width) && position.y > zone.y && position.y < (zone.y + zone.height);
+    });
+  }
+
+  getTilesetFromIndexAndLayer(index: number) {
+    return this.tileSets.reduce((acc, ts) => {
+      if (ts.firstgid <= index && ts.firstgid > acc.firstgid) {
+        return ts;
+      }
+      return acc;
     });
   }
 
