@@ -49,7 +49,7 @@ export default class Game {
 
     this.entities.forEach(e => e.tick(dt));
 
-    this.ctx.fillStyle = 'cyan';
+    this.ctx.fillStyle = '#cbd1be';
     this.ctx.fillRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
     this.ctx.scale(SCALE, SCALE);
     this.ctx.translate(-this.player.x + (PLAYFIELD_WIDTH/2), -this.player.y + (PLAYFIELD_HEIGHT/2));

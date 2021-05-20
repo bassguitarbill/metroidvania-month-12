@@ -15,8 +15,15 @@ function initializeCanvas(): HTMLCanvasElement{
   canvas.height = CANVAS_HEIGHT;
   const ctx = canvas.getContext('2d')!;
   ctx.imageSmoothingEnabled = false;
+  function resizeCanvas() {
+    canvas.style.top = `${window.innerHeight/2 - canvas.height/2}px`;
+    canvas.style.left = `${window.innerWidth/2 - canvas.width/2}px`;
+  }
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
   return canvas;
 }
+
 
 export {
   initializeCanvas,

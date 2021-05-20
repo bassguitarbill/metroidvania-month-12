@@ -3,6 +3,8 @@ import { loadJson } from "./load.js";
 import { Vector2 } from "./math.js";
 import Game from "./Game.js";
 
+const OOB_COLOR = "#160712";
+
 export default class GameMap {
   animationTimer = 0;
   waterLevel = 0;
@@ -50,10 +52,20 @@ export default class GameMap {
     const currentZone = this.getZone(game.player.position);
     if (currentZone) {
       ctx.drawImage(this.terrainLayerImage, currentZone.x, currentZone.y, currentZone.width, currentZone.height, currentZone.x, currentZone.y, currentZone.width, currentZone.height);
+
+      const mapWidth = this.mapData.width * this.mapData.tilewidth;
+      const mapHeight = this.mapData.height * this.mapData.tileheight;
+      
+      ctx.fillStyle = OOB_COLOR;
+
+      ctx.beginPath();
+      ctx.rect(-mapWidth, -mapHeight, 3 * mapWidth, 3 * mapHeight)
+      ctx.rect(currentZone.x + 1, currentZone.y + currentZone.height - 1, currentZone.width - 2, -currentZone.height + 2)
+      ctx.fill();
     } else {
+      // If you're outside the map, you probably won't be able to get back in, but at least this will make for a funny screenshot
       ctx.drawImage(this.terrainLayerImage, 0, 0, this.mapData.width, this.mapData.height);
     }
-    
   }
 
   getTileIndex(x: number, y: number) {

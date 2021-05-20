@@ -1,3 +1,8 @@
 body {
   margin: 0px;
+  background-color: #160712;
+}
+
+canvas {
+  position: absolute;
 }
