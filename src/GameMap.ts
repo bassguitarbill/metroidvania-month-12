@@ -9,6 +9,7 @@ export default class GameMap {
   darknessLevel = 0;
   maxDarknessLevel = 0;
   terrainLayer: MapDataLayer;
+  terrainLayerImage: HTMLImageElement;
   zoneLayer: MapDataLayer;
 
   colliderData: Array<Array<number>> = [];
@@ -18,6 +19,7 @@ export default class GameMap {
     const terrainLayer = this.mapData.layers.find(l => l.name === 'terrain');
     if (!terrainLayer) throw 'No terrain layer in map data';
     this.terrainLayer = terrainLayer;
+    this.terrainLayerImage = this.drawLayerImage(terrainLayer);
 
     const zoneLayer = this.mapData.layers.find(l => l.name === 'zones');
     if (!zoneLayer) throw 'No terrain layer in map data';
@@ -41,32 +43,17 @@ export default class GameMap {
 
   draw(ctx: CanvasRenderingContext2D, game: Game) {
     if(!this.mapData) return;
-    this.drawLayer(ctx, this.terrainLayer, game);
+    this.drawTerrainLayer(ctx, game);
   }
 
-  drawLayer(ctx: CanvasRenderingContext2D, layer: MapDataLayer, game: Game) {
-    //const tilesetData = tileset.tileSetData!;
-    //const image = tileset.image;
-    //const columns = tilesetData.columns;
-
-    const { tilewidth, tileheight } = this.mapData;
-    
+  drawTerrainLayer(ctx: CanvasRenderingContext2D, game: Game) {
     const currentZone = this.getZone(game.player.position);
-    if (!currentZone) return;
-    for (let x=(currentZone.x / tilewidth); x < ((currentZone.x+currentZone.width) / tilewidth); x++) {
-      for (let y=(currentZone.y / tileheight); y < ((currentZone.y+currentZone.height) / tileheight); y++) {
-        const tileIndex = layer.data[(layer.width * y) + x];
-        if (tileIndex === 0) continue; // Empty tile
-        const tileset = this.getTilesetFromIndexAndLayer(tileIndex);
-        let tileFromSet = tileIndex - tileset.firstgid;
-
-        if (tileFromSet < 0) console.error('fuck', x, y, tileIndex, tileFromSet);
-        const tileImageX = (tileFromSet % tileset.tileSetData.columns) * tilewidth;
-        const tileImageY = Math.floor(tileFromSet / tileset.tileSetData.columns) * tileheight;
-        ctx.drawImage(tileset.image, tileImageX, tileImageY, tilewidth, tileheight,
-          x * tilewidth, y * tileheight, tilewidth, tileheight);
-      }
+    if (currentZone) {
+      ctx.drawImage(this.terrainLayerImage, currentZone.x, currentZone.y, currentZone.width, currentZone.height, currentZone.x, currentZone.y, currentZone.width, currentZone.height);
+    } else {
+      ctx.drawImage(this.terrainLayerImage, 0, 0, this.mapData.width, this.mapData.height);
     }
+    
   }
 
   getTileIndex(x: number, y: number) {
@@ -92,6 +79,30 @@ export default class GameMap {
     });
   }
 
+  drawLayerImage(layer: MapDataLayer): HTMLImageElement {
+    const canvas = document.createElement('canvas');
+    canvas.width = this.mapData.width * this.mapData.tilewidth;
+    canvas.height = this.mapData.height * this.mapData.tileheight;
+    const ctx = canvas.getContext('2d')!;
+    
+    const { tilewidth, tileheight } = this.mapData;
+    for (let x=0; x < layer.width; x++) {
+      for (let y=0; y < layer.height; y++) {
+        const tileIndex = layer.data[(layer.width * y) + x];
+        if (tileIndex === 0) continue; // Empty tile
+        const tileset = this.getTilesetFromIndexAndLayer(tileIndex);
+        let tileFromSet = tileIndex - tileset.firstgid;
+        
+        const tileImageX = (tileFromSet % tileset.tileSetData.columns) * tilewidth;
+        const tileImageY = Math.floor(tileFromSet / tileset.tileSetData.columns) * tileheight;
+        ctx.drawImage(tileset.image, tileImageX, tileImageY, tilewidth, tileheight,
+          x * tilewidth, y * tileheight, tilewidth, tileheight);
+      }
+    }  
+    const image = new Image();
+    image.src = canvas.toDataURL();
+    return image;
+  }
 }
 
 interface TileMapData {
