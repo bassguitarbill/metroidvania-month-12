@@ -55,12 +55,12 @@ export default class GameMap {
 
       const mapWidth = this.mapData.width * this.mapData.tilewidth;
       const mapHeight = this.mapData.height * this.mapData.tileheight;
-      
+
       ctx.fillStyle = OOB_COLOR;
 
       ctx.beginPath();
       ctx.rect(-mapWidth, -mapHeight, 3 * mapWidth, 3 * mapHeight)
-      ctx.rect(currentZone.x + 1, currentZone.y + currentZone.height - 1, currentZone.width - 2, -currentZone.height + 2)
+      ctx.rect(currentZone.x + 1, currentZone.y + currentZone.height - 1, currentZone.width - 2, -currentZone.height + 2) // Path this rectangle upside-down so it is NOT masked
       ctx.fill();
     } else {
       // If you're outside the map, you probably won't be able to get back in, but at least this will make for a funny screenshot
