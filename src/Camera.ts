@@ -5,6 +5,8 @@ export default class Camera {
   translationX: number = 0;
   translationY: number = 0;
 
+  zoneBoundMap: {[key in number]: any} = {};
+
   constructor(readonly game: Game) {};
 
   translateCamera(ctx: CanvasRenderingContext2D) {
@@ -13,17 +15,37 @@ export default class Camera {
       this.translationX = PLAYFIELD_WIDTH/2 - this.game.player.x;
       this.translationY = PLAYFIELD_HEIGHT/2 - this.game.player.y;
     } else {
-      const verticallyConstrained = zone.height <= PLAYFIELD_HEIGHT;
-      const horizontallyConstrained = zone.width <= PLAYFIELD_WIDTH;
-      if (verticallyConstrained) {
-        this.translationY = PLAYFIELD_HEIGHT/2 - zone.y - (zone.height / 2);
+      if (zone.id in this.zoneBoundMap) {
+
       } else {
-        this.translationY = PLAYFIELD_HEIGHT/2 - this.game.player.y;
+        const verticallyConstrained = zone.height <= PLAYFIELD_HEIGHT;
+        const horizontallyConstrained = zone.width <= PLAYFIELD_WIDTH;
+        this.zoneBoundMap[zone.id] = {
+          verticallyConstrained,
+          horizontallyConstrained,
+          translationX: horizontallyConstrained ? PLAYFIELD_WIDTH/2 - zone.x - (zone.width / 2) : undefined,
+          translationY: verticallyConstrained ? PLAYFIELD_HEIGHT/2 - zone.y - (zone.height / 2) : undefined,
+          upperBound: verticallyConstrained ? undefined : -zone.y,
+          lowerBound: verticallyConstrained ? undefined : PLAYFIELD_HEIGHT - (zone.y + zone.height),
+          leftBound: horizontallyConstrained ? undefined : -zone.x,
+          rightBound: horizontallyConstrained ? undefined : PLAYFIELD_WIDTH - (zone.x + zone.width),
+        }
+        console.log("Zone " + zone.id);
+        console.table(zone);
+        console.table(this.zoneBoundMap[zone.id]);
+      }
+      const { verticallyConstrained, horizontallyConstrained, upperBound, lowerBound, leftBound, rightBound, translationX, translationY } = this.zoneBoundMap[zone.id];
+      if (verticallyConstrained) {
+        this.translationY = translationY;
+      } else {
+        const followPlayer = PLAYFIELD_HEIGHT/2 - this.game.player.y;
+        this.translationY = Math.max(Math.min(upperBound, followPlayer), lowerBound);
       }
       if (horizontallyConstrained) {
-        this.translationX = PLAYFIELD_WIDTH/2 - zone.x - (zone.width / 2);
+        this.translationX = translationX
       } else {
-        this.translationX = PLAYFIELD_WIDTH/2 - this.game.player.x;
+        const followPlayer = PLAYFIELD_WIDTH/2 - this.game.player.x;
+        this.translationX = Math.max(Math.min(leftBound, followPlayer), rightBound);
       }
     }
     ctx.translate(this.translationX, this.translationY);
