@@ -14,7 +14,6 @@ export default class StateMachine<StateType> {
     if (transition) {
       transition.callback();
       this.currentState = targetState;
-      console.log(targetState);
     } else {
       console.error(`Invalid state transition ${this.currentState} to ${targetState}`);
     }

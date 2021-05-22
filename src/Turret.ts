@@ -5,7 +5,7 @@ import Spritesheet from "./Spritesheet.js";
 import StateMachine from "./StateMachine.js";
 
 const EMERGE_TIME = 1200;
-const AIM_TIME = 400;
+const AIM_TIME = 600;
 const BURST_COOLDOWN_TIME = 500;
 const COOLDOWN_TIME = 3000;
 
@@ -13,13 +13,17 @@ export default class Turret extends Entity {
   static ceilingSpritesheet: Spritesheet;
 
   static async load() {
-    Turret.ceilingSpritesheet = await Spritesheet.load('assets/images/ceiling-turret.png', 32, 32);;
+    Turret.ceilingSpritesheet = await Spritesheet.load('assets/images/ceiling-turret.png', 32, 32);
+    await TurretBullet.load();
   }
+
+  bulletOffset = new Vector2(12, 12);
 
   timer = 0;
   timerCallback = () => {};
 
   burstCounter = 3;
+  targetLocation: Vector2 | null = null;
 
   animationFrame = 0;
   readonly stateMachine: StateMachine<TurretState>;
@@ -86,12 +90,21 @@ export default class Turret extends Entity {
   }
 
   senseTarget() {
-    return this.game.player.y > this.y; // Make this a proper hitbox
+    if (this.game.player.y > this.y) {
+      return this.targetLocation = this.game.player.position.clone(); // TODO this should aim at the player's center mass
+    }
+    return null;
   }
 
   fireProjectile() {
+    if (!this.targetLocation) {
+      console.error('Turret\'s broke');
+      return;
+    } 
     this.burstCounter --;
-    console.log("boum"); // Boum
+    const bulletOrigin = Vector2.sumOf(this.position, this.bulletOffset)
+    const directionToTarget = new Vector2(this.targetLocation.x - bulletOrigin.x, this.targetLocation.y - bulletOrigin.y).normalize();
+    new TurretBullet(this.game, bulletOrigin, directionToTarget.times(0.1));
   }
 
   populateStateMachine() {
@@ -132,4 +145,27 @@ enum TurretState {
   FIRING,
   BURST_COOLDOWN,
   COOLDOWN,
+}
+
+class TurretBullet extends Entity {
+  static spritesheet: Spritesheet;
+  static async load() {
+    TurretBullet.spritesheet = await Spritesheet.load('assets/images/turret-bullet.png', 8, 8);
+  }
+
+  timer = 6000;
+  constructor(game: Game, position: Vector2, readonly velocity: Vector2) {
+    super(game, position);
+  }
+  
+  tick(dt: number) {
+    this.timer -= dt;
+    if (this.timer < 0) this.destroy();
+    this.position.x += this.velocity.x * dt;
+    this.position.y += this.velocity.y * dt;
+  }
+
+  draw(ctx: CanvasRenderingContext2D) {
+    TurretBullet.spritesheet.draw(ctx, this.position.x, this.position.y, Math.floor((this.timer / 100) % 4), 0);
+  }
 }
