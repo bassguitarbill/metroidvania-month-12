@@ -4,6 +4,7 @@ import { SCALE } from './canvas.js';
 import Player from "./Player.js";
 import { Vector2 } from "./math.js";
 import Camera from "./Camera.js";
+import Turret from "./Turret.js";
 
 const BIG_TICK = 100;
 
@@ -27,6 +28,8 @@ export default class Game {
 
     this.player = new Player(this, new Vector2(128, 64));
     this.camera = new Camera(this);
+    Turret.load();
+    new Turret(this, new Vector2(112, 128));
 
     this.tick = this.tick.bind(this);
   }
@@ -52,7 +55,7 @@ export default class Game {
 
     this.entities.forEach(e => e.tick(dt));
 
-    this.ctx.fillStyle = '#cbd1be';
+    this.ctx.fillStyle = '#579fb4';
     this.ctx.fillRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
     this.ctx.scale(SCALE, SCALE);
     this.camera.translateCamera(this.ctx);
