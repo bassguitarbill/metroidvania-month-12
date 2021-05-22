@@ -1,3 +1,4 @@
+import AABBHitbox from "./AABBHitbox.js";
 import Entity from "./Entity.js";
 import { TILE_SIZE } from "./Game.js";
 import { Controls, isControlPressed } from "./Input.js";
@@ -20,7 +21,11 @@ export default class Player extends Entity {
   isOnSlope = false;
   gravityScale = JUMP_HELD_GRAVITY_SCALE;
 
+  hitbox = new AABBHitbox(HITBOX_OFFSET.clone(), Vector2.sumOf(HITBOX_OFFSET, HITBOX_SIZE));
+
   tick(dt: number) {
+    this.hitbox.offset = this.position;
+
     let xVelocity = this.velocity.x + 0;
     if (isControlPressed(Controls.RIGHT)) {
       xVelocity += (RUN_ACCELERATION * dt);
@@ -249,5 +254,9 @@ export default class Player extends Entity {
     ctx.fillStyle = 'white';
     ctx.fillRect(this.x, this.y, 1, 1);
     ctx.fillText(this.game.gameMap!.getZone(this.position)?.zoneNumber + "", this.x, this.y - 10);
+  }
+
+  getHitbox() {
+    return this.hitbox;
   }
 }

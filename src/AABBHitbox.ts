@@ -21,4 +21,8 @@ export default class AABBHitbox {
     if (this.bottomRight.y < other.topLeft.y) return false;
     return true;
   }
+
+  get center(): Vector2 {
+    return new Vector2((this.topLeft.x + this.bottomRight.x) / 2, (this.topLeft.y + this.bottomRight.y) / 2);
+  }
 }

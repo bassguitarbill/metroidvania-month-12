@@ -6,8 +6,9 @@ import StateMachine from "./StateMachine.js";
 
 const EMERGE_TIME = 1200;
 const AIM_TIME = 600;
-const BURST_COOLDOWN_TIME = 500;
+const BURST_COOLDOWN_TIME = 400;
 const COOLDOWN_TIME = 3000;
+const SHUTDOWN_TIME = 4000;
 
 export default class Turret extends Entity {
   static ceilingSpritesheet: Spritesheet;
@@ -48,7 +49,10 @@ export default class Turret extends Entity {
         }
         break;
       case TurretState.EMERGING:
-        this.animationFrame = 11 - Math.floor(((this.timer) % 1200) / 100);
+        this.animationFrame = 11 - Math.floor(((this.timer) % EMERGE_TIME) / 100);
+        break;
+      case TurretState.RETRACTING:
+        this.animationFrame = Math.floor(((this.timer) % EMERGE_TIME) / 100);
         break;
       case TurretState.ACTIVE:
         if (this.senseTarget()) {
@@ -91,7 +95,7 @@ export default class Turret extends Entity {
 
   senseTarget() {
     if (this.game.player.y > this.y) {
-      return this.targetLocation = this.game.player.position.clone(); // TODO this should aim at the player's center mass
+      return this.targetLocation = this.game.player.hitbox.center;
     }
     return null;
   }
@@ -112,13 +116,13 @@ export default class Turret extends Entity {
       () => { this.startCountdown(EMERGE_TIME, () => this.stateMachine.transition(TurretState.ACTIVE)) });
 
     this.stateMachine.addTransition(TurretState.EMERGING, TurretState.ACTIVE, // finish emerging
-      () => { this.clearCountdown() });
+      () => { this.startCountdown(SHUTDOWN_TIME, () => this.stateMachine.transition(TurretState.RETRACTING)) });
 
     this.stateMachine.addTransition(TurretState.ACTIVE, TurretState.AIMING,
       () => { this.startCountdown(AIM_TIME, () => this.stateMachine.transition(TurretState.FIRING)) }); // sense player
 
     this.stateMachine.addTransition(TurretState.AIMING, TurretState.ACTIVE, // lose player
-      () => { this.clearCountdown() });
+      () => { this.startCountdown(SHUTDOWN_TIME, () => this.stateMachine.transition(TurretState.RETRACTING)) });
 
     this.stateMachine.addTransition(TurretState.AIMING, TurretState.FIRING, // finish aiming
       () => { this.burstCounter = 3; });
@@ -126,14 +130,19 @@ export default class Turret extends Entity {
     this.stateMachine.addTransition(TurretState.FIRING, TurretState.BURST_COOLDOWN,
       () => { this.startCountdown(BURST_COOLDOWN_TIME, () => this.stateMachine.transition(TurretState.FIRING)) }); // fire one shot
 
-    this.stateMachine.addTransition(TurretState.BURST_COOLDOWN, TurretState.FIRING, // cooldown from that one shot
-      () => { });
+    this.stateMachine.addTransition(TurretState.BURST_COOLDOWN, TurretState.FIRING, () => { });// cooldown from that one shot
 
     this.stateMachine.addTransition(TurretState.FIRING, TurretState.COOLDOWN,
       () => { this.startCountdown(COOLDOWN_TIME, () => this.stateMachine.transition(TurretState.ACTIVE)) }); // finish firing
 
-    this.stateMachine.addTransition(TurretState.COOLDOWN, TurretState.ACTIVE,
-      () => { this.clearCountdown() }); // finish cooldown
+    this.stateMachine.addTransition(TurretState.COOLDOWN, TurretState.ACTIVE, // finish cooldown
+      () => { this.startCountdown(SHUTDOWN_TIME, () => this.stateMachine.transition(TurretState.RETRACTING)) });
+
+    this.stateMachine.addTransition(TurretState.ACTIVE, TurretState.RETRACTING, // finish cooldown
+      () => { this.startCountdown(EMERGE_TIME, () => this.stateMachine.transition(TurretState.INIT)) });
+
+    this.stateMachine.addTransition(TurretState.RETRACTING, TurretState.INIT, // finish cooldown
+      () => { this.clearCountdown() });
   }
 }
 
@@ -145,6 +154,7 @@ enum TurretState {
   FIRING,
   BURST_COOLDOWN,
   COOLDOWN,
+  RETRACTING,
 }
 
 class TurretBullet extends Entity {

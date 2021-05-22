@@ -30,9 +30,6 @@ export default class Camera {
           leftBound: horizontallyConstrained ? undefined : -zone.x,
           rightBound: horizontallyConstrained ? undefined : PLAYFIELD_WIDTH - (zone.x + zone.width),
         }
-        console.log("Zone " + zone.zoneNumber);
-        console.table(zone);
-        console.table(this.zoneBoundMap[zone.zoneNumber]);
       }
       const { verticallyConstrained, horizontallyConstrained, upperBound, lowerBound, leftBound, rightBound, translationX, translationY } = this.zoneBoundMap[zone.zoneNumber];
       if (verticallyConstrained) {
