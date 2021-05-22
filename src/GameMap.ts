@@ -13,6 +13,7 @@ export default class GameMap {
   terrainLayer: MapDataLayer;
   terrainLayerImage: HTMLImageElement;
   zoneLayer: MapDataLayer;
+  zoneCollection: ZoneCollection;
 
   colliderData: Array<Array<number>> = [];
   checkingTheseTiles: Array<number> = [];
@@ -26,6 +27,7 @@ export default class GameMap {
     const zoneLayer = this.mapData.layers.find(l => l.name === 'zones');
     if (!zoneLayer) throw 'No terrain layer in map data';
     this.zoneLayer = zoneLayer;
+    this.zoneCollection = new ZoneCollection(zoneLayer);
   }
   
   static async loadInstance(mapFilePath: string): Promise<GameMap> {
@@ -51,8 +53,8 @@ export default class GameMap {
   drawTerrainLayer(ctx: CanvasRenderingContext2D, game: Game) {
     const currentZone = this.getZone(game.player.position);
     if (currentZone) {
-      ctx.drawImage(this.terrainLayerImage, currentZone.x, currentZone.y, currentZone.width, currentZone.height, currentZone.x, currentZone.y, currentZone.width, currentZone.height);
-
+      currentZone.draw(ctx, this.terrainLayerImage);
+      
       const mapWidth = this.mapData.width * this.mapData.tilewidth;
       const mapHeight = this.mapData.height * this.mapData.tileheight;
 
@@ -60,7 +62,18 @@ export default class GameMap {
 
       ctx.beginPath();
       ctx.rect(-mapWidth, -mapHeight, 3 * mapWidth, 3 * mapHeight)
-      ctx.rect(currentZone.x + 1, currentZone.y + currentZone.height - 1, currentZone.width - 2, -currentZone.height + 2) // Path this rectangle upside-down so it is NOT masked
+      if (currentZone.polygonalAreas.length) {
+        currentZone.polygonalAreas.forEach(a => {
+          ctx.lineTo(a.polygon[0].x + a.x, a.polygon[0].y + a.y);
+          for (let i=a.polygon.length - 1; i >= 0; i--) { // Path this polygon backwards so it is NOT masked
+            const pt = a.polygon[i];
+            ctx.lineTo(pt.x + a.x, pt.y + a.y);
+          }
+        });
+      } else {
+        ctx.rect(currentZone.x + 1, currentZone.y + currentZone.height - 1, currentZone.width - 2, -currentZone.height + 2) // Path this rectangle upside-down so it is NOT masked
+      }
+     
       ctx.fill();
     } else {
       // If you're outside the map, you probably won't be able to get back in, but at least this will make for a funny screenshot
@@ -76,10 +89,12 @@ export default class GameMap {
     return this.getTileIndex(Math.floor(position.x / this.mapData.tilewidth), Math.floor(position.y / this.mapData.tileheight));
   }
 
-  getZone(position: Vector2): ObjectData | undefined {
-    return this.zoneLayer.objects.find(zone => {
-      return position.x > zone.x && position.x < (zone.x + zone.width) && position.y > zone.y && position.y < (zone.y + zone.height);
-    });
+  getZone(position: Vector2): Zone | undefined {
+    return this.zoneCollection.zones.find(zone => {
+      return zone.rectangularAreas.find(a => {
+        return position.x > a.x && position.x < (a.x + a.width) && position.y > a.y && position.y < (a.y + a.height);
+      });
+    })
   }
 
   getTilesetFromIndexAndLayer(index: number) {
@@ -114,6 +129,73 @@ export default class GameMap {
     const image = new Image();
     image.src = canvas.toDataURL();
     return image;
+  }
+}
+
+class ZoneCollection {
+  zones: Array<Zone> = [];
+  constructor(zoneLayer: MapDataLayer) {
+    zoneLayer.objects.forEach(this.addArea.bind(this));
+  }
+  addArea(area: ObjectData) {
+    const zoneNumber = area.properties.find(p => p.name === 'zone')?.value as number;
+    if (zoneNumber === undefined) {
+      console.error('Unable to add area to ZoneCollection: no \'zone\' property detected');
+      return;
+    }
+    let zone = this.zones.find(z => z.zoneNumber === zoneNumber);
+    if (!zone) {
+      zone = new Zone(zoneNumber);
+      this.zones.push(zone);
+    }
+
+    if (area.polygon) {
+      zone.polygonalAreas.push(area);
+    } else {
+      zone.rectangularAreas.push(area);
+    }
+    
+  }
+
+  getZone(zoneNumber: number) {
+    return this.zones.find(z => z.zoneNumber === zoneNumber);
+  }
+}
+
+class Zone {
+  rectangularAreas: Array<ObjectData> = [];
+  polygonalAreas: Array<ObjectData> = [];
+  constructor(readonly zoneNumber: number) {};
+
+  get x() {
+    return this.rectangularAreas.reduce((a1, a2) => a1.x > a2.x ? a2 : a1).x;
+  }
+
+  get y() {
+    return this.rectangularAreas.reduce((a1, a2) => a1.y > a2.y ? a2 : a1).y;
+  }
+  get xMax() {
+    const farthestRightArea = this.rectangularAreas.reduce((a1, a2) => (a1.x + a1.width) < (a2.x + a2.width) ? a2 : a1);
+    return farthestRightArea.x + farthestRightArea.width;
+  }
+
+  get yMax() {
+    const lowestArea = this.rectangularAreas.reduce((a1, a2) => (a1.y + a1.height) < (a2.y + a2.height) ? a2 : a1);
+    return lowestArea.y + lowestArea.height;
+  }
+
+  get width() {
+    return this.xMax - this.x;
+  }
+
+  get height() {
+    return this.yMax - this.y;
+  }
+
+  draw(ctx: CanvasRenderingContext2D, terrainImage: HTMLImageElement) {
+    this.rectangularAreas.forEach(a => {
+      ctx.drawImage(terrainImage, a.x, a.y, a.width, a.height, a.x, a.y, a.width, a.height)
+    })
   }
 }
 
@@ -161,6 +243,7 @@ interface ObjectData {
   id: number,
   name: string,
   point: boolean,
+  polygon: Array<{x: number, y:number}>,
   properties:[
         {
           name: string,

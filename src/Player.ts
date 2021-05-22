@@ -248,6 +248,6 @@ export default class Player extends Entity {
     ctx.fillRect(this.x + HITBOX_OFFSET.x, this.y + HITBOX_OFFSET.y, HITBOX_SIZE.x, HITBOX_SIZE.y);
     ctx.fillStyle = 'white';
     ctx.fillRect(this.x, this.y, 1, 1);
-    ctx.fillText(this.game.gameMap!.getZone(this.position)!.id + "", this.x, this.y - 10);
+    ctx.fillText(this.game.gameMap!.getZone(this.position)?.zoneNumber + "", this.x, this.y - 10);
   }
 }

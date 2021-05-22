@@ -15,12 +15,12 @@ export default class Camera {
       this.translationX = PLAYFIELD_WIDTH/2 - this.game.player.x;
       this.translationY = PLAYFIELD_HEIGHT/2 - this.game.player.y;
     } else {
-      if (zone.id in this.zoneBoundMap) {
+      if (zone.zoneNumber in this.zoneBoundMap) {
 
       } else {
         const verticallyConstrained = zone.height <= PLAYFIELD_HEIGHT;
         const horizontallyConstrained = zone.width <= PLAYFIELD_WIDTH;
-        this.zoneBoundMap[zone.id] = {
+        this.zoneBoundMap[zone.zoneNumber] = {
           verticallyConstrained,
           horizontallyConstrained,
           translationX: horizontallyConstrained ? PLAYFIELD_WIDTH/2 - zone.x - (zone.width / 2) : undefined,
@@ -30,11 +30,11 @@ export default class Camera {
           leftBound: horizontallyConstrained ? undefined : -zone.x,
           rightBound: horizontallyConstrained ? undefined : PLAYFIELD_WIDTH - (zone.x + zone.width),
         }
-        console.log("Zone " + zone.id);
+        console.log("Zone " + zone.zoneNumber);
         console.table(zone);
-        console.table(this.zoneBoundMap[zone.id]);
+        console.table(this.zoneBoundMap[zone.zoneNumber]);
       }
-      const { verticallyConstrained, horizontallyConstrained, upperBound, lowerBound, leftBound, rightBound, translationX, translationY } = this.zoneBoundMap[zone.id];
+      const { verticallyConstrained, horizontallyConstrained, upperBound, lowerBound, leftBound, rightBound, translationX, translationY } = this.zoneBoundMap[zone.zoneNumber];
       if (verticallyConstrained) {
         this.translationY = translationY;
       } else {
