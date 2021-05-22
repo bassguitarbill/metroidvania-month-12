@@ -2,22 +2,17 @@ import TileSet from "./TileSet.js";
 import { loadJson } from "./load.js";
 import { Vector2 } from "./math.js";
 import Game from "./Game.js";
+import AABBHitbox from "./AABBHitbox.js";
 
 const OOB_COLOR = "#160712";
 
 export default class GameMap {
   animationTimer = 0;
-  waterLevel = 0;
-  darknessLevel = 0;
-  maxDarknessLevel = 0;
   terrainLayer: MapDataLayer;
   terrainLayerImage: HTMLImageElement;
   zoneLayer: MapDataLayer;
   zoneCollection: ZoneCollection;
-
-  colliderData: Array<Array<number>> = [];
-  checkingTheseTiles: Array<number> = [];
-
+  
   constructor(readonly mapData: TileMapData, readonly tileSets: Array<TileSet>) {
     const terrainLayer = this.mapData.layers.find(l => l.name === 'terrain');
     if (!terrainLayer) throw 'No terrain layer in map data';
@@ -129,6 +124,20 @@ export default class GameMap {
     const image = new Image();
     image.src = canvas.toDataURL();
     return image;
+  }
+
+  collides(hitbox: AABBHitbox): boolean {
+    for (let x = hitbox.topLeft.x; x < hitbox.bottomRight.x; x += this.mapData.tilewidth) {
+      for (let y = hitbox.topLeft.y; y < hitbox.bottomRight.y; y += this.mapData.tileheight) {
+        const tileIndex = this.getTileIndexFromGameMapPosition(new Vector2(x, y));
+        const tile = this.terrainLayer.data[tileIndex];
+        if (tile > 0) return true;
+      }
+    }
+    if ( this.terrainLayer.data[this.getTileIndexFromGameMapPosition(new Vector2(hitbox.bottomRight.x, hitbox.topLeft.y))] > 0) return true;
+    if ( this.terrainLayer.data[this.getTileIndexFromGameMapPosition(new Vector2(hitbox.topLeft.x, hitbox.bottomRight.y))] > 0) return true;
+    if ( this.terrainLayer.data[this.getTileIndexFromGameMapPosition(new Vector2(hitbox.bottomRight.x, hitbox.bottomRight.y))] > 0) return true;
+    return false;
   }
 }
 

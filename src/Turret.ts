@@ -1,3 +1,4 @@
+import AABBHitbox from "./AABBHitbox.js";
 import Entity from "./Entity.js";
 import Game from "./Game.js";
 import { Vector2 } from "./math.js";
@@ -103,6 +104,7 @@ export default class Turret extends Entity {
   fireProjectile() {
     if (!this.targetLocation) {
       console.error('Turret\'s broke');
+      debugger;
       return;
     } 
     this.burstCounter --;
@@ -163,6 +165,7 @@ class TurretBullet extends Entity {
     TurretBullet.spritesheet = await Spritesheet.load('assets/images/turret-bullet.png', 8, 8);
   }
 
+  hitbox = new AABBHitbox(new Vector2(1, 1), new Vector2(7, 7));
   timer = 6000;
   constructor(game: Game, position: Vector2, readonly velocity: Vector2) {
     super(game, position);
@@ -173,6 +176,10 @@ class TurretBullet extends Entity {
     if (this.timer < 0) this.destroy();
     this.position.x += this.velocity.x * dt;
     this.position.y += this.velocity.y * dt;
+    this.hitbox.offset = this.position;
+    if (this.game.gameMap?.collides(this.hitbox)) {
+      this.destroy();
+    };
   }
 
   draw(ctx: CanvasRenderingContext2D) {
