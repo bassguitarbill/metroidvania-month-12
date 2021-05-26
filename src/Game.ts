@@ -29,6 +29,7 @@ export default class Game {
     this.player = new Player(this, new Vector2(128, 64));
     this.camera = new Camera(this);
     Turret.load();
+    Player.load();
     new Turret(this, new Vector2(112, 128));
 
     this.tick = this.tick.bind(this);

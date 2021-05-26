@@ -3,10 +3,14 @@ import Entity from "./Entity.js";
 import { TILE_SIZE } from "./Game.js";
 import { Controls, isControlPressed } from "./Input.js";
 import { lerp, Vector2 } from "./math.js";
+import Spritesheet from "./Spritesheet.js";
 
 const GRAVITY = .003;
 const HITBOX_OFFSET = new Vector2(-8, -47);
 const HITBOX_SIZE = new Vector2(16, 48);
+
+const SPRITE_OFFSET = new Vector2(-16, -45);
+const SPRITE_SIZE = new Vector2(32, 48);
 
 const RUN_ACCELERATION = 0.004;
 const MAX_RUN_SPEED = 1.5;
@@ -16,12 +20,21 @@ const JUMP_HELD_GRAVITY_SCALE = 1;
 const JUMP_RELEASED_GRAVITY_SCALE = 2.5;
 
 export default class Player extends Entity {
+
+  static spritesheet: Spritesheet;
+
+  static async load() {
+    Player.spritesheet = await Spritesheet.load('assets/images/old-man-lobster-arm.png', 32, 48);
+  }
+
   velocity = new Vector2();
   isOnGround = false;
   isOnSlope = false;
   gravityScale = JUMP_HELD_GRAVITY_SCALE;
 
   hitbox = new AABBHitbox(HITBOX_OFFSET.clone(), Vector2.sumOf(HITBOX_OFFSET, HITBOX_SIZE));
+
+  lastFacingDirection = 1;
 
   tick(dt: number) {
     this.hitbox.offset = this.position;
@@ -44,8 +57,12 @@ export default class Player extends Entity {
     }
 
     xVelocity = Math.min(Math.max(xVelocity, -MAX_RUN_SPEED), MAX_RUN_SPEED);
-    if (Math.sign(xVelocity) - 2 === Math.sign(this.velocity.x)) xVelocity = 0; // Deceleration should not push you backwards
+    if (Math.sign(xVelocity) * -1 === Math.sign(this.velocity.x)) xVelocity = 0; // Deceleration should not push you backwards
     this.velocity.x = xVelocity;
+
+    if (this.velocity.x !== 0) {
+      this.lastFacingDirection = this.velocity.x > 0 ? 0 : 1;
+    }
 
     if (isControlPressed(Controls.UP)) {
       if (this.isOnGround) {
@@ -249,11 +266,14 @@ export default class Player extends Entity {
   }
 
   draw(ctx: CanvasRenderingContext2D) {
-    ctx.fillStyle = this.isOnSlope ? 'blue' : this.isOnGround ? 'red' : 'yellow';
+    /*ctx.fillStyle = this.isOnSlope ? 'blue' : this.isOnGround ? 'red' : 'yellow';
     ctx.fillRect(this.x + HITBOX_OFFSET.x, this.y + HITBOX_OFFSET.y, HITBOX_SIZE.x, HITBOX_SIZE.y);
     ctx.fillStyle = 'white';
     ctx.fillRect(this.x, this.y, 1, 1);
-    ctx.fillText(this.game.gameMap!.getZone(this.position)?.zoneNumber + "", this.x, this.y - 10);
+    ctx.fillText(this.game.gameMap!.getZone(this.position)?.zoneNumber + "", this.x, this.y - 10);*/
+    const spriteX = 0;
+    const spriteY = this.lastFacingDirection;
+    Player.spritesheet.draw(ctx, this.x + SPRITE_OFFSET.x, this.y + SPRITE_OFFSET.y, spriteX, spriteY);
   }
 
   getHitbox() {
