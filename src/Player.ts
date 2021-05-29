@@ -40,43 +40,18 @@ export default class Player extends Entity {
 
   animationTimer = 0;
 
+  isDamageable = true;
+  damageCooldown = 0;
+
   tick(dt: number) {
     this.animationTimer += dt;
     this.hitbox.offset = this.position;
 
-    let xVelocity = this.velocity.x + 0;
-    if (isControlPressed(Controls.RIGHT)) {
-      xVelocity += (RUN_ACCELERATION * dt);
-      if (Math.sign(this.velocity.x) === -1) {
-        // pushing right while moving left
-        xVelocity += (RUN_DECELERATION * dt);
-      }
-    } else if (isControlPressed(Controls.LEFT)) {
-      xVelocity -= (RUN_ACCELERATION * dt);
-      if (Math.sign(this.velocity.x) === 1) {
-        // pushing left while moving right
-        xVelocity -= (RUN_DECELERATION * dt);
-      }
-    } else {
-      xVelocity -= (Math.sign(xVelocity) * RUN_DECELERATION * dt);
-    }
+    this.damageCooldown -= dt;
+    if (this.damageCooldown < 0) this.isDamageable = true;
 
-    xVelocity = Math.min(Math.max(xVelocity, -MAX_RUN_SPEED), MAX_RUN_SPEED);
-    if (Math.sign(xVelocity) * -1 === Math.sign(this.velocity.x)) xVelocity = 0; // Deceleration should not push you backwards
-    this.velocity.x = xVelocity;
-
-    if (this.velocity.x !== 0) {
-      this.lastFacingDirection = this.velocity.x > 0 ? 0 : 1;
-    }
-
-    if (isControlPressed(Controls.UP)) {
-      if (this.isOnGround) {
-        this.isOnGround = false;
-        this.velocity.y = -.21;
-      } 
-    } else {
-      this.gravityScale = JUMP_RELEASED_GRAVITY_SCALE;
-    }
+    if (this.isDamageable) this.checkControls(dt);
+    
 
     this.x += (this.velocity.x * dt * 0.1);
     this.velocity.y += (GRAVITY * this.gravityScale);
@@ -195,6 +170,42 @@ export default class Player extends Entity {
     }
   }
 
+  checkControls(dt: number) {
+    let xVelocity = this.velocity.x + 0;
+    if (isControlPressed(Controls.RIGHT)) {
+      xVelocity += (RUN_ACCELERATION * dt);
+      if (Math.sign(this.velocity.x) === -1) {
+        // pushing right while moving left
+        xVelocity += (RUN_DECELERATION * dt);
+      }
+    } else if (isControlPressed(Controls.LEFT)) {
+      xVelocity -= (RUN_ACCELERATION * dt);
+      if (Math.sign(this.velocity.x) === 1) {
+        // pushing left while moving right
+        xVelocity -= (RUN_DECELERATION * dt);
+      }
+    } else {
+      xVelocity -= (Math.sign(xVelocity) * RUN_DECELERATION * dt);
+    }
+
+    xVelocity = Math.min(Math.max(xVelocity, -MAX_RUN_SPEED), MAX_RUN_SPEED);
+    if (Math.sign(xVelocity) * -1 === Math.sign(this.velocity.x)) xVelocity = 0; // Deceleration should not push you backwards
+    this.velocity.x = xVelocity;
+
+    if (this.velocity.x !== 0) {
+      this.lastFacingDirection = this.velocity.x > 0 ? 0 : 1;
+    }
+
+    if (isControlPressed(Controls.UP)) {
+      if (this.isOnGround) {
+        this.isOnGround = false;
+        this.velocity.y = -.21;
+      } 
+    } else {
+      this.gravityScale = JUMP_RELEASED_GRAVITY_SCALE;
+    }
+  }
+
   checkLateralCollisions() {
     const horizOffset = HITBOX_OFFSET.x + HITBOX_SIZE.x;
     // Check first for side-to-side collisions
@@ -289,6 +300,9 @@ export default class Player extends Entity {
         return new Vector2(0, 0); // Idle
       }
     } else { // I am airborne
+      if (this.isDamageable === false) { // I am taking damage
+        return new Vector2(0, 1);
+      }
       if (this.velocity.y > 0) {
         return new Vector2(7, 0); // I am falling
       } else {
@@ -299,5 +313,14 @@ export default class Player extends Entity {
 
   getHitbox() {
     return this.hitbox;
+  }
+
+  damage(_amount: number) {
+    this.velocity = new Vector2((this.lastFacingDirection - 0.5) * 2, -0.05);
+    this.isOnGround = false;
+    this.isOnSlope = false;
+    this.isDamageable = false;
+    this.damageCooldown = 500;
+    console.log('do it')
   }
 }

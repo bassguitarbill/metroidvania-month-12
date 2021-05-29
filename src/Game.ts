@@ -5,6 +5,7 @@ import Player from "./Player.js";
 import { Vector2 } from "./math.js";
 import Camera from "./Camera.js";
 import Turret from "./Turret.js";
+import Ag from "./Ag.js";
 
 const BIG_TICK = 100;
 
@@ -30,7 +31,9 @@ export default class Game {
     this.camera = new Camera(this);
     Turret.load();
     Player.load();
+    Ag.load();
     new Turret(this, new Vector2(112, 128));
+    new Ag(this, new Vector2(112, 336));
 
     this.tick = this.tick.bind(this);
   }
