@@ -40,18 +40,25 @@ export default class Player extends Entity {
 
   animationTimer = 0;
 
-  isDamageable = true;
-  damageCooldown = 0;
+  isKnockback = false;
+  knockbackCooldown = 0;
+
+  isInvincible = false;
+  invincibilityCooldown = 0;
+  invincibilityFlashing = false;
 
   tick(dt: number) {
     this.animationTimer += dt;
     this.hitbox.offset = this.position;
 
-    this.damageCooldown -= dt;
-    if (this.damageCooldown < 0) this.isDamageable = true;
+    this.knockbackCooldown -= dt;
+    if (this.knockbackCooldown < 0) this.isKnockback = false;
 
-    if (this.isDamageable) this.checkControls(dt);
-    
+    this.invincibilityCooldown -= dt;
+    if (this.invincibilityCooldown < 0) this.isInvincible = false;
+    this.invincibilityFlashing = !this.invincibilityFlashing;
+
+    if (!this.isKnockback) this.checkControls(dt);
 
     this.x += (this.velocity.x * dt * 0.1);
     this.velocity.y += (GRAVITY * this.gravityScale);
@@ -287,6 +294,7 @@ export default class Player extends Entity {
     ctx.fillStyle = 'white';
     ctx.fillRect(this.x, this.y, 1, 1);
     ctx.fillText(this.game.gameMap!.getZone(this.position)?.zoneNumber + "", this.x, this.y - 10);*/
+    if (this.isInvincible && this.invincibilityFlashing) return;
     const spriteCoordinates = this.chooseSprite();
     const spritesheet = this.lastFacingDirection ? Player.spritesheetLeft : Player.spritesheetRight;
     spritesheet.draw(ctx, this.x + SPRITE_OFFSET.x, this.y + SPRITE_OFFSET.y, spriteCoordinates.x, spriteCoordinates.y);
@@ -300,7 +308,7 @@ export default class Player extends Entity {
         return new Vector2(0, 0); // Idle
       }
     } else { // I am airborne
-      if (this.isDamageable === false) { // I am taking damage
+      if (this.isKnockback) { // I am being knocked back
         return new Vector2(0, 1);
       }
       if (this.velocity.y > 0) {
@@ -319,7 +327,9 @@ export default class Player extends Entity {
     this.velocity = new Vector2((this.lastFacingDirection - 0.5) * 2, -0.05);
     this.isOnGround = false;
     this.isOnSlope = false;
-    this.isDamageable = false;
-    this.damageCooldown = 500;
+    this.isKnockback = true;
+    this.knockbackCooldown = 500;
+    this.isInvincible = true;
+    this.invincibilityCooldown = 2000;
   }
 }

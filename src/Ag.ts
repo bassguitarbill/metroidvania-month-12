@@ -21,7 +21,7 @@ export default class Ag extends Entity {
     this.position.x += this.velocity.x * dt;
     this.position.y += this.velocity.y;
     if (this.game.gameMap?.collides(this.hitbox)) this.reverseDirection(dt);
-    if (this.game.player.isDamageable && this.hitbox.collides(this.game.player.hitbox)) {
+    if (!this.game.player.isInvincible && this.hitbox.collides(this.game.player.hitbox)) {
       this.game.player.damage(1);
       new AgBump(this.game, this.position);
     }
