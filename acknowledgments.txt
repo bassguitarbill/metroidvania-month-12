@@ -1,1 +1,3 @@
 Palette is urbex-16 (https://lospec.com/palette-list/urbex-16)
+
+Player sprite is modified Hero Spritesheet (https://opengameart.org/content/hero-spritesheets-ars-notoria)

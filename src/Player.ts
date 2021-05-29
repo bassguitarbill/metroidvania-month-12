@@ -9,8 +9,8 @@ const GRAVITY = .003;
 const HITBOX_OFFSET = new Vector2(-8, -47);
 const HITBOX_SIZE = new Vector2(16, 48);
 
-const SPRITE_OFFSET = new Vector2(-16, -45);
-const SPRITE_SIZE = new Vector2(32, 48);
+const SPRITE_OFFSET = new Vector2(-23, -46);
+const SPRITE_SIZE = new Vector2(46, 50);
 
 const RUN_ACCELERATION = 0.004;
 const MAX_RUN_SPEED = 1.5;
@@ -21,10 +21,12 @@ const JUMP_RELEASED_GRAVITY_SCALE = 2.5;
 
 export default class Player extends Entity {
 
-  static spritesheet: Spritesheet;
+  static spritesheetRight: Spritesheet;
+  static spritesheetLeft: Spritesheet;
 
   static async load() {
-    Player.spritesheet = await Spritesheet.load('assets/images/old-man-lobster-arm.png', 32, 48);
+    Player.spritesheetRight = await Spritesheet.load('assets/images/bio-guy.png', SPRITE_SIZE.x, SPRITE_SIZE.y);
+    Player.spritesheetLeft = await Spritesheet.load('assets/images/bio-guy-reversed.png', SPRITE_SIZE.x, SPRITE_SIZE.y);
   }
 
   velocity = new Vector2();
@@ -36,7 +38,10 @@ export default class Player extends Entity {
 
   lastFacingDirection = 1;
 
+  animationTimer = 0;
+
   tick(dt: number) {
+    this.animationTimer += dt;
     this.hitbox.offset = this.position;
 
     let xVelocity = this.velocity.x + 0;
@@ -271,9 +276,25 @@ export default class Player extends Entity {
     ctx.fillStyle = 'white';
     ctx.fillRect(this.x, this.y, 1, 1);
     ctx.fillText(this.game.gameMap!.getZone(this.position)?.zoneNumber + "", this.x, this.y - 10);*/
-    const spriteX = 0;
-    const spriteY = this.lastFacingDirection;
-    Player.spritesheet.draw(ctx, this.x + SPRITE_OFFSET.x, this.y + SPRITE_OFFSET.y, spriteX, spriteY);
+    const spriteCoordinates = this.chooseSprite();
+    const spritesheet = this.lastFacingDirection ? Player.spritesheetLeft : Player.spritesheetRight;
+    spritesheet.draw(ctx, this.x + SPRITE_OFFSET.x, this.y + SPRITE_OFFSET.y, spriteCoordinates.x, spriteCoordinates.y);
+  }
+
+  chooseSprite(): Vector2 {
+    if (this.isOnGround) { // I am on the ground
+      if (Math.abs(this.velocity.x) > 0.02) { // I am running
+        return new Vector2(Math.floor(this.animationTimer / 100 % 8), 3); // Running animation
+      } else {
+        return new Vector2(0, 0); // Idle
+      }
+    } else { // I am airborne
+      if (this.velocity.y > 0) {
+        return new Vector2(7, 0); // I am falling
+      } else {
+        return new Vector2(6, 0); // I am rising
+      }
+    }
   }
 
   getHitbox() {
