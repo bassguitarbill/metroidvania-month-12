@@ -180,6 +180,10 @@ class TurretBullet extends Entity {
     if (this.game.gameMap?.collides(this.hitbox)) {
       this.destroy();
     };
+    if (this.game.player.isDamageable && this.hitbox.collides(this.game.player.hitbox)) {
+      this.game.player.damage(1);
+      this.destroy();
+    }
   }
 
   draw(ctx: CanvasRenderingContext2D) {

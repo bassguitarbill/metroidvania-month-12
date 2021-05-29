@@ -321,6 +321,5 @@ export default class Player extends Entity {
     this.isOnSlope = false;
     this.isDamageable = false;
     this.damageCooldown = 500;
-    console.log('do it')
   }
 }
