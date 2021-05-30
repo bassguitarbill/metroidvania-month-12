@@ -6,7 +6,7 @@ export default class AABBHitbox {
   get topLeft(): Vector2 { return Vector2.sumOf(this._topLeft, this.offset)}
   get bottomRight(): Vector2 { return Vector2.sumOf(this._bottomRight, this.offset)}
   draw(ctx: CanvasRenderingContext2D) {
-    if (!(window as any).debug) return;
+    //if (!(window as any).debug) return;
     const alpha = ctx.globalAlpha;
     ctx.globalAlpha = 0.5;
     ctx.fillStyle = 'red';

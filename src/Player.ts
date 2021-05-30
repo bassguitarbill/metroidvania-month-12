@@ -6,8 +6,12 @@ import { lerp, Vector2 } from "./math.js";
 import Spritesheet from "./Spritesheet.js";
 
 const GRAVITY = .003;
-const HITBOX_OFFSET = new Vector2(-8, -47);
-const HITBOX_SIZE = new Vector2(16, 48);
+
+const HITBOX_OFFSET = new Vector2(-8, -42);
+const HITBOX_SIZE = new Vector2(16, 44);
+
+const CROUCHING_HITBOX_OFFSET = new Vector2(-8, -27);
+const CROUCHING_HITBOX_SIZE = new Vector2(16, 29);
 
 const SPRITE_OFFSET = new Vector2(-23, -46);
 const SPRITE_SIZE = new Vector2(46, 50);
@@ -34,7 +38,13 @@ export default class Player extends Entity {
   isOnSlope = false;
   gravityScale = JUMP_HELD_GRAVITY_SCALE;
 
-  hitbox = new AABBHitbox(HITBOX_OFFSET.clone(), Vector2.sumOf(HITBOX_OFFSET, HITBOX_SIZE));
+  isCrouching = false;
+
+  standingHitbox = new AABBHitbox(HITBOX_OFFSET.clone(), Vector2.sumOf(HITBOX_OFFSET, HITBOX_SIZE));
+  crouchingHitbox = new AABBHitbox(CROUCHING_HITBOX_OFFSET.clone(), Vector2.sumOf(CROUCHING_HITBOX_OFFSET, CROUCHING_HITBOX_SIZE));
+  get hitbox() {
+    return this.isCrouching ? this.crouchingHitbox : this.standingHitbox;
+  }
 
   lastFacingDirection = 1;
 
@@ -178,6 +188,13 @@ export default class Player extends Entity {
   }
 
   checkControls(dt: number) {
+    if (isControlPressed(Controls.DOWN) && this.isOnGround) {
+      this.isCrouching = true;
+      this.velocity.x = 0;
+      return;
+    }
+    this.isCrouching = false;
+
     let xVelocity = this.velocity.x + 0;
     if (isControlPressed(Controls.RIGHT)) {
       xVelocity += (RUN_ACCELERATION * dt);
@@ -289,11 +306,7 @@ export default class Player extends Entity {
   }
 
   draw(ctx: CanvasRenderingContext2D) {
-    /*ctx.fillStyle = this.isOnSlope ? 'blue' : this.isOnGround ? 'red' : 'yellow';
-    ctx.fillRect(this.x + HITBOX_OFFSET.x, this.y + HITBOX_OFFSET.y, HITBOX_SIZE.x, HITBOX_SIZE.y);
-    ctx.fillStyle = 'white';
-    ctx.fillRect(this.x, this.y, 1, 1);
-    ctx.fillText(this.game.gameMap!.getZone(this.position)?.zoneNumber + "", this.x, this.y - 10);*/
+    this.hitbox.draw(ctx);
     if (this.isInvincible && this.invincibilityFlashing) return;
     const spriteCoordinates = this.chooseSprite();
     const spritesheet = this.lastFacingDirection ? Player.spritesheetLeft : Player.spritesheetRight;
@@ -302,6 +315,9 @@ export default class Player extends Entity {
 
   chooseSprite(): Vector2 {
     if (this.isOnGround) { // I am on the ground
+      if (this.isCrouching) {
+        return new Vector2(1, 0);
+      }
       if (Math.abs(this.velocity.x) > 0.02) { // I am running
         return new Vector2(Math.floor(this.animationTimer / 100 % 8), 3); // Running animation
       } else {
@@ -317,10 +333,6 @@ export default class Player extends Entity {
         return new Vector2(6, 0); // I am rising
       }
     }
-  }
-
-  getHitbox() {
-    return this.hitbox;
   }
 
   damage(_amount: number) {
