@@ -1,6 +1,7 @@
 import AABBHitbox from "./AABBHitbox.js";
 import Entity from "./Entity.js";
 import Game from "./Game.js";
+import { loadSpritesheetFrom } from "./load.js";
 import { Vector2 } from "./math.js";
 import Spritesheet from "./Spritesheet.js";
 import StateMachine from "./StateMachine.js";
@@ -12,12 +13,8 @@ const COOLDOWN_TIME = 3000;
 const SHUTDOWN_TIME = 4000;
 
 export default class Turret extends Entity {
+  @loadSpritesheetFrom('assets/images/ceiling-turret.png', 32, 32)
   static ceilingSpritesheet: Spritesheet;
-
-  static async load() {
-    Turret.ceilingSpritesheet = await Spritesheet.load('assets/images/ceiling-turret.png', 32, 32);
-    await TurretBullet.load();
-  }
 
   bulletOffset = new Vector2(12, 12);
 
@@ -160,10 +157,8 @@ enum TurretState {
 }
 
 class TurretBullet extends Entity {
+  @loadSpritesheetFrom('assets/images/turret-bullet.png', 8, 8)
   static spritesheet: Spritesheet;
-  static async load() {
-    TurretBullet.spritesheet = await Spritesheet.load('assets/images/turret-bullet.png', 8, 8);
-  }
 
   hitbox = new AABBHitbox(new Vector2(1, 1), new Vector2(7, 7));
   timer = 6000;
@@ -177,7 +172,7 @@ class TurretBullet extends Entity {
     this.position.x += this.velocity.x * dt;
     this.position.y += this.velocity.y * dt;
     this.hitbox.offset = this.position;
-    if (this.game.gameMap?.collides(this.hitbox)) {
+    if (this.game.gameMap.collides(this.hitbox)) {
       this.destroy();
     };
     if (!this.game.player.isInvincible && this.hitbox.collides(this.game.player.hitbox)) {

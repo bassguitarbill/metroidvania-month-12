@@ -18,23 +18,19 @@ export default class Game {
   entities: Array<Entity> = [];
   ctx: CanvasRenderingContext2D;
   timestamp: number = 0;
-  
-  gameMap?: GameMap;
 
   player: Player;
   camera: Camera;
   gui: GUI;
 
-  constructor() {
+  constructor(readonly gameMap: GameMap) {
     const canvas = document.querySelector('canvas')!;
     this.ctx = canvas.getContext('2d')!;
 
     this.player = new Player(this, new Vector2(128, 64));
     this.camera = new Camera(this);
-    Turret.load();
-    Player.load();
-    Ag.load();
     this.gui = new GUI(this);
+
     new Turret(this, new Vector2(112, 128));
     new Ag(this, new Vector2(112, 336));
 
@@ -50,8 +46,12 @@ export default class Game {
     if (index > -1) this.entities.splice(index, 1);
   }
 
+  static async load() {
+    const gameMap = await GameMap.loadInstance('../maps/spaceColony.json');
+    return new Game(gameMap);
+  }
+
   async run() {
-    this.gameMap = await GameMap.loadInstance('../maps/spaceColony.json');
     requestAnimationFrame(this.tick);
   }
 

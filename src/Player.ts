@@ -2,6 +2,7 @@ import AABBHitbox from "./AABBHitbox.js";
 import Entity from "./Entity.js";
 import { TILE_SIZE } from "./Game.js";
 import { Controls, isControlPressed } from "./Input.js";
+import { loadSpritesheetFrom } from "./load.js";
 import { lerp, Vector2 } from "./math.js";
 import Spritesheet from "./Spritesheet.js";
 
@@ -25,13 +26,10 @@ const JUMP_RELEASED_GRAVITY_SCALE = 2.5;
 
 export default class Player extends Entity {
 
+  @loadSpritesheetFrom('assets/images/bio-guy.png', SPRITE_SIZE.x, SPRITE_SIZE.y)
   static spritesheetRight: Spritesheet;
+  @loadSpritesheetFrom('assets/images/bio-guy-reversed.png', SPRITE_SIZE.x, SPRITE_SIZE.y)
   static spritesheetLeft: Spritesheet;
-
-  static async load() {
-    Player.spritesheetRight = await Spritesheet.load('assets/images/bio-guy.png', SPRITE_SIZE.x, SPRITE_SIZE.y);
-    Player.spritesheetLeft = await Spritesheet.load('assets/images/bio-guy-reversed.png', SPRITE_SIZE.x, SPRITE_SIZE.y);
-  }
 
   velocity = new Vector2();
   isOnGround = false;

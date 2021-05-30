@@ -1,7 +1,7 @@
 import { initializeCanvas } from "./canvas.js";
 import Game from "./Game.js";
 
-window.addEventListener('load', () => {
+window.addEventListener('load', async () => {
   initializeCanvas();
-  new Game().run();
+  (await Game.load()).run();
 });

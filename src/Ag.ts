@@ -1,15 +1,12 @@
 import AABBHitbox from "./AABBHitbox.js";
 import Entity from "./Entity.js";
+import { loadSpritesheetFrom } from "./load.js";
 import { Vector2 } from "./math.js";
 import Spritesheet from "./Spritesheet.js";
 
 export default class Ag extends Entity {
+  @loadSpritesheetFrom('assets/images/enemy-ag.png', 36, 26)
   static spritesheet: Spritesheet;
-
-  static async load() {
-    Ag.spritesheet = await Spritesheet.load('assets/images/enemy-ag.png', 36, 26);
-    await AgBump.load();
-  }
 
   hitbox: AABBHitbox = new AABBHitbox(new Vector2(5, 5), new Vector2(30, 20));
   velocity = new Vector2(.1, 0);
@@ -20,7 +17,7 @@ export default class Ag extends Entity {
     this.hitbox.offset = this.position;
     this.position.x += this.velocity.x * dt;
     this.position.y += this.velocity.y;
-    if (this.game.gameMap?.collides(this.hitbox)) this.reverseDirection(dt);
+    if (this.game.gameMap.collides(this.hitbox)) this.reverseDirection(dt);
     if (!this.game.player.isInvincible && this.hitbox.collides(this.game.player.hitbox)) {
       this.game.player.damage(1);
       new AgBump(this.game, this.position);
@@ -38,10 +35,8 @@ export default class Ag extends Entity {
 }
 
 class AgBump extends Entity {
+  @loadSpritesheetFrom('assets/images/ag-bump.png', 36, 26)
   static spritesheet: Spritesheet;
-  static async load() {
-    AgBump.spritesheet = await Spritesheet.load('assets/images/ag-bump.png', 36, 26);
-  }
 
   animationTimer = 0;
 
