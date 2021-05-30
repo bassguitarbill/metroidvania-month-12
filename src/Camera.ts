@@ -10,7 +10,7 @@ export default class Camera {
   constructor(readonly game: Game) {};
 
   translateCamera(ctx: CanvasRenderingContext2D) {
-    const zone = this.game.gameMap!.getZone(this.game.player.position);
+    const zone = this.game.gameMap.getZone(this.game.player.position);
     if (!zone) {
       this.translationX = PLAYFIELD_WIDTH/2 - this.game.player.x;
       this.translationY = PLAYFIELD_HEIGHT/2 - this.game.player.y;

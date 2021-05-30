@@ -1,5 +1,5 @@
 import Entity from "./Entity.js";
-import GameMap from "./GameMap.js";
+import GameMap, { ObjectData } from "./GameMap.js";
 import { SCALE } from './canvas.js';
 import Player from "./Player.js";
 import { Vector2 } from "./math.js";
@@ -23,6 +23,8 @@ export default class Game {
   camera: Camera;
   gui: GUI;
 
+  zoneNumber = -1;
+
   constructor(readonly gameMap: GameMap) {
     const canvas = document.querySelector('canvas')!;
     this.ctx = canvas.getContext('2d')!;
@@ -30,9 +32,6 @@ export default class Game {
     this.player = new Player(this, new Vector2(128, 64));
     this.camera = new Camera(this);
     this.gui = new GUI(this);
-
-    new Turret(this, new Vector2(112, 128));
-    new Ag(this, new Vector2(112, 336));
 
     this.tick = this.tick.bind(this);
   }
@@ -62,6 +61,12 @@ export default class Game {
 
     this.entities.forEach(e => e.tick(dt));
 
+    const currentZone = this.gameMap.getZone(this.player.position)?.zoneNumber;
+    if ((currentZone !== undefined) && (this.zoneNumber !== currentZone)) {
+      this.zoneNumber = currentZone;
+      this.switchZone(currentZone);
+    }
+
     this.ctx.fillStyle = '#579fb4';
     this.ctx.fillRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
     this.ctx.scale(SCALE, SCALE);
@@ -74,5 +79,25 @@ export default class Game {
     this.ctx.scale(1/SCALE, 1/SCALE);
 
     requestAnimationFrame(this.tick);
+  }
+
+  switchZone(zoneNumber: number) {
+    for (let i = this.entities.length - 1; i >= 0; i --) {
+      if (!(this.entities[i] instanceof Player)) this.entities[i].destroy();
+    };
+    this.gameMap.zoneCollection.getZone(zoneNumber)?.getSpawners().forEach(s => this.spawn(s));
+  }
+
+  spawn(spawner: ObjectData) {
+    const spawnType = spawner.properties.find(p => p.name === 'spawnType')?.value;
+    switch(spawnType) {
+      case 'Turret':
+        new Turret(this, new Vector2(spawner.x, spawner.y));
+        break;
+      case 'Ag':
+        new Ag(this, new Vector2(spawner.x, spawner.y));
+        break;
+    }
+
   }
 }

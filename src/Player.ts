@@ -55,9 +55,12 @@ export default class Player extends Entity {
   invincibilityCooldown = 0;
   invincibilityFlashing = false;
 
+  currentZone: number = 0;
+
   tick(dt: number) {
     this.animationTimer += dt;
     this.hitbox.offset = this.position;
+    this.currentZone = this.game.gameMap.getZone(this.position)?.zoneNumber || 0;
 
     this.knockbackCooldown -= dt;
     if (this.knockbackCooldown < 0) this.isKnockback = false;
@@ -287,7 +290,7 @@ export default class Player extends Entity {
   getTerrain(offset = new Vector2()) {
     const tileIndex = this.game.gameMap.getTileIndexFromGameMapPosition(Vector2.sumOf(this.position, offset))!;
     const offsetTerrain = this.game.gameMap.terrainLayer.data[tileIndex]!;
-    const gameMap = this.game.gameMap!;
+    const gameMap = this.game.gameMap;
     const tileSet = gameMap.getTilesetFromIndexAndLayer(offsetTerrain);
     return offsetTerrain === 0 ? -1 : offsetTerrain - tileSet.firstgid;
   }
@@ -296,7 +299,7 @@ export default class Player extends Entity {
     const tileIndex = this.game.gameMap.getTileIndexFromGameMapPosition(Vector2.sumOf(this.position, offset))!;
     const offsetTerrain = this.game.gameMap.terrainLayer.data[tileIndex]!;
     //if (tileIndex === 0) return;
-    const gameMap = this.game.gameMap!;
+    const gameMap = this.game.gameMap;
     const tileSet = gameMap.getTilesetFromIndexAndLayer(offsetTerrain);
     const listedProps = tileSet.tileSetData.tiles.find(t => t.id === offsetTerrain - tileSet.firstgid)?.properties;
     if (!listedProps) return undefined;

@@ -10,6 +10,7 @@ export default class GameMap {
   animationTimer = 0;
   terrainLayer: MapDataLayer;
   terrainLayerImage: HTMLImageElement;
+  eventLayer: MapDataLayer;
   zoneLayer: MapDataLayer;
   zoneCollection: ZoneCollection;
   
@@ -19,10 +20,14 @@ export default class GameMap {
     this.terrainLayer = terrainLayer;
     this.terrainLayerImage = this.drawLayerImage(terrainLayer);
 
+    const eventLayer = this.mapData.layers.find(l => l.name === 'events');
+    if (!eventLayer) throw 'No event layer in map data';
+    this.eventLayer = eventLayer;
+
     const zoneLayer = this.mapData.layers.find(l => l.name === 'zones');
     if (!zoneLayer) throw 'No terrain layer in map data';
     this.zoneLayer = zoneLayer;
-    this.zoneCollection = new ZoneCollection(zoneLayer);
+    this.zoneCollection = new ZoneCollection(this);
   }
   
   static async loadInstance(mapFilePath: string): Promise<GameMap> {
@@ -143,8 +148,8 @@ export default class GameMap {
 
 class ZoneCollection {
   zones: Array<Zone> = [];
-  constructor(zoneLayer: MapDataLayer) {
-    zoneLayer.objects.forEach(this.addArea.bind(this));
+  constructor(readonly gameMap: GameMap) {
+    gameMap.zoneLayer.objects.forEach(this.addArea.bind(this));
   }
   addArea(area: ObjectData) {
     const zoneNumber = area.properties.find(p => p.name === 'zone')?.value as number;
@@ -154,7 +159,7 @@ class ZoneCollection {
     }
     let zone = this.zones.find(z => z.zoneNumber === zoneNumber);
     if (!zone) {
-      zone = new Zone(zoneNumber);
+      zone = new Zone(this.gameMap, zoneNumber);
       this.zones.push(zone);
     }
 
@@ -174,7 +179,7 @@ class ZoneCollection {
 class Zone {
   rectangularAreas: Array<ObjectData> = [];
   polygonalAreas: Array<ObjectData> = [];
-  constructor(readonly zoneNumber: number) {};
+  constructor(readonly gameMap: GameMap, readonly zoneNumber: number) {};
 
   get x() {
     return this.rectangularAreas.reduce((a1, a2) => a1.x > a2.x ? a2 : a1).x;
@@ -205,6 +210,10 @@ class Zone {
     this.rectangularAreas.forEach(a => {
       ctx.drawImage(terrainImage, a.x, a.y, a.width, a.height, a.x, a.y, a.width, a.height)
     })
+  }
+
+  getSpawners() {
+    return this.gameMap.eventLayer.objects.filter(o => o.type === 'spawner' && this.rectangularAreas.find(a => (o.x > a.x) && (o.x < (a.x + a.width)) && (o.y > a.y) && (o.y < (a.y + a.height))));
   }
 }
 
