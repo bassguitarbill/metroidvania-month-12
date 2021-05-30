@@ -285,16 +285,16 @@ export default class Player extends Entity {
   }
 
   getTerrain(offset = new Vector2()) {
-    const tileIndex = this.game.gameMap?.getTileIndexFromGameMapPosition(Vector2.sumOf(this.position, offset))!;
-    const offsetTerrain = this.game.gameMap?.terrainLayer.data[tileIndex]!;
+    const tileIndex = this.game.gameMap.getTileIndexFromGameMapPosition(Vector2.sumOf(this.position, offset))!;
+    const offsetTerrain = this.game.gameMap.terrainLayer.data[tileIndex]!;
     const gameMap = this.game.gameMap!;
     const tileSet = gameMap.getTilesetFromIndexAndLayer(offsetTerrain);
     return offsetTerrain === 0 ? -1 : offsetTerrain - tileSet.firstgid;
   }
 
   getPropertiesFromTerrain(offset = new Vector2()) {
-    const tileIndex = this.game.gameMap?.getTileIndexFromGameMapPosition(Vector2.sumOf(this.position, offset))!;
-    const offsetTerrain = this.game.gameMap?.terrainLayer.data[tileIndex]!;
+    const tileIndex = this.game.gameMap.getTileIndexFromGameMapPosition(Vector2.sumOf(this.position, offset))!;
+    const offsetTerrain = this.game.gameMap.terrainLayer.data[tileIndex]!;
     //if (tileIndex === 0) return;
     const gameMap = this.game.gameMap!;
     const tileSet = gameMap.getTilesetFromIndexAndLayer(offsetTerrain);
