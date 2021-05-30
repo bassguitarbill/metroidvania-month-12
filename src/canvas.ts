@@ -1,12 +1,18 @@
 // SNES = 512×224 (16:7)
 // This: nearby that but 16:9
-const PLAYFIELD_WIDTH  = 512; // 16 * 32
+
+const PLAYFIELD_WIDTH = 384;  // 16 * 24
+const GUI_WIDTH = 128;        // 16 * 8
+
 const PLAYFIELD_HEIGHT = 288; // 16 * 18
+
+const GAME_WIDTH = PLAYFIELD_WIDTH + GUI_WIDTH;
+const GAME_HEIGHT = PLAYFIELD_HEIGHT;
 
 const SCALE = 2;
 
-const CANVAS_WIDTH  = PLAYFIELD_WIDTH  * SCALE;
-const CANVAS_HEIGHT = PLAYFIELD_HEIGHT * SCALE;
+const CANVAS_WIDTH  = GAME_WIDTH  * SCALE;
+const CANVAS_HEIGHT = GAME_HEIGHT * SCALE;
 
 function initializeCanvas(): HTMLCanvasElement{
   const canvas = document.createElement('canvas');

@@ -316,7 +316,7 @@ export default class Player extends Entity {
   chooseSprite(): Vector2 {
     if (this.isOnGround) { // I am on the ground
       if (this.isCrouching) {
-        return new Vector2(1, 0);
+        return new Vector2(1, 0); // I am crouching
       }
       if (Math.abs(this.velocity.x) > 0.02) { // I am running
         return new Vector2(Math.floor(this.animationTimer / 100 % 8), 3); // Running animation

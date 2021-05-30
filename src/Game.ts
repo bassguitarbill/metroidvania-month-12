@@ -6,6 +6,7 @@ import { Vector2 } from "./math.js";
 import Camera from "./Camera.js";
 import Turret from "./Turret.js";
 import Ag from "./Ag.js";
+import GUI from "./GUI.js";
 
 const BIG_TICK = 100;
 
@@ -22,6 +23,7 @@ export default class Game {
 
   player: Player;
   camera: Camera;
+  gui: GUI;
 
   constructor() {
     const canvas = document.querySelector('canvas')!;
@@ -32,6 +34,7 @@ export default class Game {
     Turret.load();
     Player.load();
     Ag.load();
+    this.gui = new GUI(this);
     new Turret(this, new Vector2(112, 128));
     new Ag(this, new Vector2(112, 336));
 
@@ -65,7 +68,9 @@ export default class Game {
     this.camera.translateCamera(this.ctx);
     if (this.gameMap) this.gameMap.draw(this.ctx, this);
     this.entities.forEach(e => e.draw(this.ctx));
+
     this.camera.untranslateCamera(this.ctx);
+    this.gui.draw(this.ctx);
     this.ctx.scale(1/SCALE, 1/SCALE);
 
     requestAnimationFrame(this.tick);
